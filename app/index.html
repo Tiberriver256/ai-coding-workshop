@@ -31,6 +31,7 @@
             <button class="ghost" id="activity-start" type="button">Start Attempt</button>
             <button class="ghost" id="activity-complete" type="button">Complete Attempt</button>
             <button class="ghost" id="activity-merge" type="button">Merge Task</button>
+            <button class="secondary" id="activity-pr" type="button">Create PR</button>
           </div>
         </div>
         <div class="activity-meta">
@@ -239,6 +240,47 @@
             <p class="qr-hint">Open the link in the mobile app to approve pairing.</p>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="modal" id="pr-modal" aria-hidden="true">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="pr-modal-title">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">GitHub</p>
+            <h3 id="pr-modal-title">Create pull request</h3>
+          </div>
+          <button class="icon-button" id="close-pr" type="button" aria-label="Close">
+            ✕
+          </button>
+        </div>
+        <p class="modal-copy">Review the draft and choose where to merge.</p>
+
+        <form id="pr-form" novalidate>
+          <label class="field">
+            <span>Title</span>
+            <input id="pr-title" name="title" type="text" maxlength="160" />
+          </label>
+
+          <label class="field">
+            <span>Description</span>
+            <textarea id="pr-description" name="description" rows="4" maxlength="1000"></textarea>
+          </label>
+
+          <label class="field">
+            <span>Base branch</span>
+            <select id="pr-base-branch" name="base">
+              <option value="main">main</option>
+              <option value="develop">develop</option>
+              <option value="release">release</option>
+            </select>
+          </label>
+
+          <div class="modal-actions">
+            <button class="ghost" id="cancel-pr" type="button">Cancel</button>
+            <button class="primary" id="submit-pr" type="submit">Create PR</button>
+          </div>
+        </form>
       </div>
     </div>
 

@@ -2,31 +2,26 @@ const storageKey = 'slice0001.tasks';
 const pairingRequestKey = 'slice0001.pairing_request';
 const pairedDevicesKey = 'slice0001.devices';
 const copilotSettingsKey = 'slice0001.copilot_cli';
-const assistantProviderKey = 'slice0001.assistant_provider';
-const defaultAttemptStatus = 'running';
+const githubCliSettingsKey = 'slice0001.github_cli';
+const assistantProviderKey = 'slice0001.assistant_provider'; const defaultAttemptStatus = 'running';
 const defaultAgentConfig = { provider: 'OpenAI', model: 'gpt-4.1-mini', temperature: 0.2 };
-const defaultCopilotSettings = { installed: true, authenticated: true, enabled: false };
+const defaultCopilotSettings = { installed: true, authenticated: true, enabled: false }, defaultGithubSettings = { installed: true, authenticated: true };
 const assistantSuggestionTemplates = ['Draft a step-by-step plan with milestones and a clear definition of done.', 'List the files to inspect, the changes to make, and the tests to run.', 'Summarize the expected behavior and call out edge cases to verify.'];
 const copilotSuggestionTemplates = ['Use Copilot CLI to outline a step-by-step approach with tests.', 'Ask Copilot CLI for a concise task summary and acceptance checks.', 'Have Copilot CLI suggest edge cases and verification steps.'];
 const activityTaskId = 'task_agent_activity_demo';
-const activityEvidenceTypes = { attempt_started: 'attempt_started', attempt_completed: 'attempt_completed', task_merged: 'task_merged' };
-const activityEvidenceLabels = { attempt_started: 'Attempt started', attempt_completed: 'Attempt completed', task_merged: 'Merged into main' };
-const todoList = document.getElementById('todo-list'), todoCount = document.getElementById('todo-count'), inProgressList = document.getElementById('in-progress-list'), inProgressCount = document.getElementById('in-progress-count'), inReviewList = document.getElementById('in-review-list'), inReviewCount = document.getElementById('in-review-count'), doneList = document.getElementById('done-list'), doneCount = document.getElementById('done-count'), taskModal = document.getElementById('task-modal'), openModalButton = document.getElementById('open-modal'), closeModalButton = document.getElementById('close-modal'), cancelModalButton = document.getElementById('cancel-modal'), form = document.getElementById('task-form'), titleInput = document.getElementById('task-title'), descriptionInput = document.getElementById('task-description'), assistantPanel = document.getElementById('assistant-panel'), assistantToggle = document.getElementById('assistant-toggle'), assistantProviderSelect = document.getElementById('assistant-provider'), assistantSuggestButton = document.getElementById('assistant-suggest'), assistantSuggestions = document.getElementById('assistant-suggestions'), titleError = document.getElementById('title-error'), connectModal = document.getElementById('connect-modal'), openConnectButton = document.getElementById('open-connect'), openPairingButton = document.getElementById('open-pairing'), closeConnectButton = document.getElementById('close-connect'), qrCodeContainer = document.getElementById('qr-code'), pairingLinkInput = document.getElementById('pairing-link'), copyLinkButton = document.getElementById('copy-link'), activityPanel = document.getElementById('agent-activity'), activityTaskTitle = document.getElementById('activity-task-title'), activityStartButton = document.getElementById('activity-start'), activityCompleteButton = document.getElementById('activity-complete'), activityMergeButton = document.getElementById('activity-merge'), activityLog = document.getElementById('activity-log'), searchInput = document.getElementById('task-search'), deviceList = document.getElementById('device-list'), pairingStatus = document.getElementById('pairing-status'), copilotToggle = document.getElementById('copilot-toggle'), copilotStatus = document.getElementById('copilot-status'), copilotInstructions = document.getElementById('copilot-instructions'), copilotPill = document.getElementById('copilot-pill');
+const activityEvidenceTypes = { attempt_started: 'attempt_started', attempt_completed: 'attempt_completed', task_merged: 'task_merged', pull_request_created: 'pull_request_created' };
+const activityEvidenceLabels = { attempt_started: 'Attempt started', attempt_completed: 'Attempt completed', task_merged: 'Merged into main', pull_request_created: 'Pull request created' };
+const todoList = document.getElementById('todo-list'), todoCount = document.getElementById('todo-count'), inProgressList = document.getElementById('in-progress-list'), inProgressCount = document.getElementById('in-progress-count'), inReviewList = document.getElementById('in-review-list'), inReviewCount = document.getElementById('in-review-count'), doneList = document.getElementById('done-list'), doneCount = document.getElementById('done-count'), taskModal = document.getElementById('task-modal'), openModalButton = document.getElementById('open-modal'), closeModalButton = document.getElementById('close-modal'), cancelModalButton = document.getElementById('cancel-modal'), form = document.getElementById('task-form'), titleInput = document.getElementById('task-title'), descriptionInput = document.getElementById('task-description'), assistantPanel = document.getElementById('assistant-panel'), assistantToggle = document.getElementById('assistant-toggle'), assistantProviderSelect = document.getElementById('assistant-provider'), assistantSuggestButton = document.getElementById('assistant-suggest'), assistantSuggestions = document.getElementById('assistant-suggestions'), titleError = document.getElementById('title-error'), connectModal = document.getElementById('connect-modal'), openConnectButton = document.getElementById('open-connect'), openPairingButton = document.getElementById('open-pairing'), closeConnectButton = document.getElementById('close-connect'), qrCodeContainer = document.getElementById('qr-code'), pairingLinkInput = document.getElementById('pairing-link'), copyLinkButton = document.getElementById('copy-link'), activityPanel = document.getElementById('agent-activity'), activityTaskTitle = document.getElementById('activity-task-title'), activityStartButton = document.getElementById('activity-start'), activityCompleteButton = document.getElementById('activity-complete'), activityMergeButton = document.getElementById('activity-merge'), activityPrButton = document.getElementById('activity-pr'), activityLog = document.getElementById('activity-log'), prModal = document.getElementById('pr-modal'), prForm = document.getElementById('pr-form'), prTitleInput = document.getElementById('pr-title'), prDescriptionInput = document.getElementById('pr-description'), prBaseBranchSelect = document.getElementById('pr-base-branch'), closePrButton = document.getElementById('close-pr'), cancelPrButton = document.getElementById('cancel-pr'), searchInput = document.getElementById('task-search'), deviceList = document.getElementById('device-list'), pairingStatus = document.getElementById('pairing-status'), copilotToggle = document.getElementById('copilot-toggle'), copilotStatus = document.getElementById('copilot-status'), copilotInstructions = document.getElementById('copilot-instructions'), copilotPill = document.getElementById('copilot-pill');
 let tasks = loadTasks();
 let pairedDevices = loadPairedDevices();
 let pairingRequest = loadPairingRequest();
-let copilotSettings = loadCopilotSettings();
-let assistantEnabled = false;
+let copilotSettings = loadCopilotSettings(); let githubSettings = loadGithubSettings();
+let assistantEnabled = false; let activePullRequestTaskId = null;
 let assistantDrafts = [];
 let assistantProvider = loadAssistantProvider();
 let searchQuery = '';
 const statusAliases = { todo: 'todo', 'in progress': 'in_progress', 'in-progress': 'in_progress', in_progress: 'in_progress', 'in review': 'in_review', 'in-review': 'in_review', in_review: 'in_review', done: 'done' };
-const columnConfig = [
-  { key: 'todo', list: todoList, count: todoCount, emptyMessage: 'No tasks yet. Create one to get started.', showCompleteAction: true },
-  { key: 'in_progress', list: inProgressList, count: inProgressCount, emptyMessage: 'Nothing in progress yet.', showCompleteAction: true },
-  { key: 'in_review', list: inReviewList, count: inReviewCount, emptyMessage: 'No reviews queued yet.', showCompleteAction: true },
-  { key: 'done', list: doneList, count: doneCount, emptyMessage: 'No tasks completed yet.', showCompleteAction: false },
-];
+const columnConfig = [{ key: 'todo', list: todoList, count: todoCount, emptyMessage: 'No tasks yet. Create one to get started.', showCompleteAction: true }, { key: 'in_progress', list: inProgressList, count: inProgressCount, emptyMessage: 'Nothing in progress yet.', showCompleteAction: true }, { key: 'in_review', list: inReviewList, count: inReviewCount, emptyMessage: 'No reviews queued yet.', showCompleteAction: true }, { key: 'done', list: doneList, count: doneCount, emptyMessage: 'No tasks completed yet.', showCompleteAction: false }];
 function loadTasks() {
   try {
     const raw = localStorage.getItem(storageKey);
@@ -51,9 +46,7 @@ function loadPairedDevices() {
     return [];
   }
 }
-function savePairedDevices(devices) {
-  localStorage.setItem(pairedDevicesKey, JSON.stringify(devices));
-}
+function savePairedDevices(devices) { localStorage.setItem(pairedDevicesKey, JSON.stringify(devices)); }
 function loadPairingRequest() {
   try {
     const raw = localStorage.getItem(pairingRequestKey);
@@ -93,12 +86,11 @@ function loadCopilotSettings() {
     return { ...defaultCopilotSettings };
   }
 }
-function saveCopilotSettings(settings) {
-  localStorage.setItem(copilotSettingsKey, JSON.stringify(settings));
-}
+function saveCopilotSettings(settings) { localStorage.setItem(copilotSettingsKey, JSON.stringify(settings)); }
 function isCopilotReady(settings) {
   return Boolean(settings?.installed) && Boolean(settings?.authenticated);
 }
+function loadGithubSettings() { try { const raw = localStorage.getItem(githubCliSettingsKey); if (!raw) { return { ...defaultGithubSettings }; } const parsed = JSON.parse(raw); const installed = typeof parsed?.installed === 'boolean' ? parsed.installed : defaultGithubSettings.installed; const authenticated = typeof parsed?.authenticated === 'boolean' ? parsed.authenticated : defaultGithubSettings.authenticated; return { installed, authenticated }; } catch (error) { console.warn('Failed to read GitHub CLI settings', error); return { ...defaultGithubSettings }; } } function isGithubCliReady(settings) { return Boolean(settings?.installed) && Boolean(settings?.authenticated); }
 function normalizeAssistantProvider(value, allowCopilot) {
   if (value === 'copilot-cli' && allowCopilot) {
     return 'copilot-cli';
@@ -115,9 +107,7 @@ function loadAssistantProvider() {
     return normalizeAssistantProvider('templates', copilotSettings?.enabled);
   }
 }
-function saveAssistantProvider(value) {
-  localStorage.setItem(assistantProviderKey, value);
-}
+function saveAssistantProvider(value) { localStorage.setItem(assistantProviderKey, value); }
 function normalizeAttempt(attempt) {
   if (!attempt || typeof attempt !== 'object') { return null; }
   const startedAt = typeof attempt.startedAt === 'string' && attempt.startedAt.trim() ? attempt.startedAt : new Date().toISOString();
@@ -139,7 +129,8 @@ function normalizeTask(task) {
   const attempts = Array.isArray(task.attempts) ? task.attempts.map((attempt) => normalizeAttempt(attempt)).filter(Boolean) : [];
   const evidence = Array.isArray(task.evidence) ? task.evidence.map((entry) => normalizeEvidenceEntry(entry)).filter(Boolean) : [];
   const activeAttemptId = typeof task.activeAttemptId === 'string' && task.activeAttemptId.trim() ? task.activeAttemptId : attempts[0]?.id || null;
-  return { ...task, status: normalizeStatus(task.status), createdAt, updatedAt: typeof task.updatedAt === 'string' && task.updatedAt.trim() ? task.updatedAt : createdAt, attempts, activeAttemptId, evidence };
+  const pullRequest = task.pullRequest && typeof task.pullRequest === 'object' ? { ...task.pullRequest, status: typeof task.pullRequest.status === 'string' && task.pullRequest.status.trim() ? task.pullRequest.status.trim().toLowerCase() : 'open', baseBranch: typeof task.pullRequest.baseBranch === 'string' && task.pullRequest.baseBranch.trim() ? task.pullRequest.baseBranch.trim() : 'main', title: typeof task.pullRequest.title === 'string' ? task.pullRequest.title : task.title || '', description: typeof task.pullRequest.description === 'string' ? task.pullRequest.description : task.description || '' } : null;
+  return { ...task, status: normalizeStatus(task.status), createdAt, updatedAt: typeof task.updatedAt === 'string' && task.updatedAt.trim() ? task.updatedAt : createdAt, attempts, activeAttemptId, evidence, pullRequest };
 }
 function normalizeStatus(status) { if (typeof status !== 'string') { return 'todo'; } const normalized = status.trim().toLowerCase(); return statusAliases[normalized] || 'todo'; }
 function saveTasks() { localStorage.setItem(storageKey, JSON.stringify(tasks)); }
@@ -188,7 +179,7 @@ function formatTimestamp(isoString) {
 }
 function formatEvidenceLabel(type) { return !type ? 'Update logged' : activityEvidenceLabels[type] || type.replace(/_/g, ' '); }
 function recordEvidence(task, type, note) { if (!task) { return null; } const timestamp = new Date().toISOString(); const entry = { id: createEvidenceId(), type, note: note || '', timestamp }; task.evidence = [...(Array.isArray(task.evidence) ? task.evidence : []), entry]; task.updatedAt = timestamp; return entry; }
-function createActivityTask() { const timestamp = new Date().toISOString(); return { id: activityTaskId, title: 'Agent status demo', description: 'Track this task as the agent moves through start, review, and merge.', status: 'todo', createdAt: timestamp, updatedAt: timestamp, attempts: [], activeAttemptId: null, evidence: [], isDemo: true }; }
+function createActivityTask() { const timestamp = new Date().toISOString(); return { id: activityTaskId, title: 'Agent status demo', description: 'Track this task as the agent moves through start, review, and merge.', status: 'todo', createdAt: timestamp, updatedAt: timestamp, attempts: [], activeAttemptId: null, evidence: [], changes: ['Drafted PR summary', 'Updated UI copy'], isDemo: true }; }
 function seedActivityTask() { if (tasks.some((task) => task.id === activityTaskId) || tasks.some((task) => normalizeStatus(task.status) === 'todo')) { return; } tasks = [createActivityTask(), ...tasks]; saveTasks(); }
 function findTaskById(taskId) { return tasks.find((task) => task.id === taskId); }
 function renderTasks() {
@@ -237,6 +228,7 @@ function renderTaskList(listElement, list, options) {
     const activeAttempt = getActiveAttempt(task);
     if (activeAttempt) { const attemptMeta = document.createElement('div'); attemptMeta.className = 'task-attempt'; const statusLabel = activeAttempt.status ? activeAttempt.status.replace('_', ' ') : defaultAttemptStatus; const agentLabel = activeAttempt.agent ? [activeAttempt.agent.provider, activeAttempt.agent.model].filter(Boolean).join(' ') : ''; attemptMeta.textContent = agentLabel ? `Attempt ${statusLabel} · ${agentLabel}` : `Attempt ${statusLabel}`; card.appendChild(attemptMeta); }
     if (Array.isArray(task.evidence) && task.evidence.length > 0) { const latest = task.evidence[task.evidence.length - 1]; const evidence = document.createElement('div'); evidence.className = 'task-evidence'; const label = latest ? formatEvidenceLabel(latest.type) : 'Evidence logged'; evidence.textContent = `${label} · ${task.evidence.length} update${task.evidence.length === 1 ? '' : 's'}`; card.appendChild(evidence); }
+    if (task.pullRequest) { const pr = task.pullRequest; const prStatus = document.createElement('div'); prStatus.className = 'task-pr'; const number = pr.number ? `#${pr.number}` : ''; const statusLabel = pr.status ? pr.status.replace('_', ' ') : 'open'; const baseLabel = pr.baseBranch ? ` · Base ${pr.baseBranch}` : ''; prStatus.textContent = `PR ${number} · ${statusLabel}${baseLabel}`.trim(); card.appendChild(prStatus); }
     if (task.status === 'done') { const status = document.createElement('div'); status.className = 'task-status'; status.textContent = 'Done'; card.appendChild(status); }
     if (options.showCompleteAction && task.status !== 'done') { const actions = document.createElement('div'); actions.className = 'task-actions'; const completeButton = document.createElement('button'); completeButton.type = 'button'; completeButton.className = 'task-action'; completeButton.textContent = 'Complete'; completeButton.addEventListener('click', () => markTaskDone(task.id)); actions.appendChild(completeButton); card.appendChild(actions); }
     listElement.appendChild(card);
@@ -283,6 +275,7 @@ function updatePairingStatus() {
 }
 function openTaskModal() { taskModal.setAttribute('aria-hidden', 'false'); taskModal.setAttribute('data-state', 'open'); titleInput.focus(); }
 function closeTaskModal() { taskModal.setAttribute('aria-hidden', 'true'); taskModal.setAttribute('data-state', 'closed'); form.reset(); clearValidation(); resetAssistantUI(); }
+function openPullRequestModal(taskId) { if (!prModal || !isGithubCliReady(githubSettings)) { return; } const task = findTaskById(taskId); if (!task) { return; } activePullRequestTaskId = task.id; if (prTitleInput) { prTitleInput.value = task.title || ''; } if (prDescriptionInput) { prDescriptionInput.value = task.description || ''; } if (prBaseBranchSelect) { prBaseBranchSelect.value = task.pullRequest?.baseBranch || prBaseBranchSelect.value || 'main'; } prModal.setAttribute('aria-hidden', 'false'); prModal.setAttribute('data-state', 'open'); prTitleInput?.focus(); } function closePullRequestModal() { if (!prModal) { return; } prModal.setAttribute('aria-hidden', 'true'); prModal.setAttribute('data-state', 'closed'); if (prForm) { prForm.reset(); } activePullRequestTaskId = null; }
 function clearValidation() { titleError.textContent = ''; titleInput.removeAttribute('aria-invalid'); }
 function validateForm() { const titleValue = titleInput.value.trim(); if (!titleValue) { titleError.textContent = 'Title is required.'; titleInput.setAttribute('aria-invalid', 'true'); titleInput.focus(); return false; } clearValidation(); return true; }
 function clearAssistantSuggestions() { if (!assistantSuggestions) { return; } assistantSuggestions.innerHTML = ''; assistantSuggestions.setAttribute('data-state', 'empty'); assistantSuggestions.removeAttribute('data-provider'); }
@@ -357,11 +350,15 @@ function buildTaskPayload({ title, description, startAttempt }) {
   if (startAttempt) { const attempt = createAttempt(defaultAgentConfig); task.attempts = [attempt]; task.activeAttemptId = attempt.id; }
   return task;
 }
+function createPullRequest(task, payload) { if (!task) { return null; } const timestamp = new Date().toISOString(); const number = Math.floor(Math.random() * 9000) + 1000; const pullRequest = { id: `pr_${Date.now().toString(36)}`, title: payload.title || task.title, description: payload.description || task.description || '', baseBranch: payload.baseBranch || 'main', status: 'open', number, createdAt: timestamp }; task.pullRequest = pullRequest; recordEvidence(task, activityEvidenceTypes.pull_request_created, `PR #${number} created`); task.updatedAt = timestamp; saveTasks(); renderTasks(); return pullRequest; }
 openModalButton.addEventListener('click', openTaskModal);
 closeModalButton.addEventListener('click', closeTaskModal);
 cancelModalButton.addEventListener('click', closeTaskModal);
 taskModal.addEventListener('click', (event) => { if (event.target === taskModal) { closeTaskModal(); } });
-window.addEventListener('keydown', (event) => { if (event.key !== 'Escape') { return; } if (taskModal.getAttribute('aria-hidden') === 'false') { closeTaskModal(); } if (connectModal.getAttribute('aria-hidden') === 'false') { closeConnectModal(); } });
+if (closePrButton) { closePrButton.addEventListener('click', closePullRequestModal); }
+if (cancelPrButton) { cancelPrButton.addEventListener('click', closePullRequestModal); }
+if (prModal) { prModal.addEventListener('click', (event) => { if (event.target === prModal) { closePullRequestModal(); } }); }
+window.addEventListener('keydown', (event) => { if (event.key !== 'Escape') { return; } if (taskModal.getAttribute('aria-hidden') === 'false') { closeTaskModal(); } if (connectModal.getAttribute('aria-hidden') === 'false') { closeConnectModal(); } if (prModal?.getAttribute('aria-hidden') === 'false') { closePullRequestModal(); } });
 titleInput.addEventListener('input', () => { if (titleInput.value.trim()) { clearValidation(); } });
 if (searchInput) { searchQuery = normalizeSearchQuery(searchInput.value); searchInput.addEventListener('input', (event) => { setSearchQuery(event.target.value); }); }
 if (assistantToggle) { assistantToggle.addEventListener('change', (event) => { setAssistantEnabled(event.target.checked); }); }
@@ -371,6 +368,7 @@ if (assistantSuggestions) { assistantSuggestions.addEventListener('click', (even
 if (activityStartButton) { activityStartButton.addEventListener('click', () => startTaskAttempt(activityTaskId)); }
 if (activityCompleteButton) { activityCompleteButton.addEventListener('click', () => completeTaskAttempt(activityTaskId)); }
 if (activityMergeButton) { activityMergeButton.addEventListener('click', () => mergeTask(activityTaskId)); }
+if (activityPrButton) { activityPrButton.addEventListener('click', () => openPullRequestModal(activityTaskId)); }
 if (copilotToggle) { copilotToggle.addEventListener('change', (event) => { setCopilotEnabled(event.target.checked); }); }
 registerColumnDropTargets();
 setAssistantEnabled(Boolean(assistantToggle?.checked));
@@ -395,6 +393,7 @@ form.addEventListener('submit', (event) => {
   renderTasks();
   closeTaskModal();
 });
+if (prForm) { prForm.addEventListener('submit', (event) => { event.preventDefault(); const task = findTaskById(activePullRequestTaskId); if (!task) { return; } const payload = { title: prTitleInput?.value.trim(), description: prDescriptionInput?.value.trim(), baseBranch: prBaseBranchSelect?.value }; createPullRequest(task, payload); closePullRequestModal(); }); }
 function startTaskAttempt(taskId) { const task = findTaskById(taskId); if (!task) { return; } const attempt = createAttempt(defaultAgentConfig); const attempts = Array.isArray(task.attempts) ? task.attempts : []; task.attempts = [attempt, ...attempts]; task.activeAttemptId = attempt.id; task.status = 'in_progress'; recordEvidence(task, activityEvidenceTypes.attempt_started, 'Attempt started'); saveTasks(); renderTasks(); }
 function completeTaskAttempt(taskId) { const task = findTaskById(taskId); if (!task) { return; } const timestamp = new Date().toISOString(); const activeAttempt = getActiveAttempt(task); if (activeAttempt) { activeAttempt.status = 'completed'; activeAttempt.updatedAt = timestamp; } task.status = 'in_review'; recordEvidence(task, activityEvidenceTypes.attempt_completed, 'Attempt completed'); saveTasks(); renderTasks(); }
 function mergeTask(taskId) { const task = findTaskById(taskId); if (!task) { return; } task.status = 'done'; recordEvidence(task, activityEvidenceTypes.task_merged, 'Merged to main'); saveTasks(); renderTasks(); }

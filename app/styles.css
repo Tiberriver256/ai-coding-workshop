@@ -241,13 +241,7 @@ p {
   font-size: 0.75rem;
   color: #8a8278;
 }
-.task-attempt {
-  margin-top: 8px;
-  font-size: 0.75rem;
-  color: #2d5a6b;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-}
+.task-attempt { margin-top: 8px; font-size: 0.75rem; color: #2d5a6b; text-transform: uppercase; letter-spacing: 0.12em; }
 .task-evidence {
   margin-top: 6px;
   font-size: 0.72rem;
@@ -255,6 +249,7 @@ p {
   letter-spacing: 0.12em;
   color: #5a4c32;
 }
+.task-pr { margin-top: 6px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; color: #2d5a6b; }
 .task-actions { margin-top: 12px; display: flex; justify-content: flex-end; }
 .task-action { border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--ink); padding: 6px 14px; font-size: 0.85rem; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
 .task-action:hover { transform: translateY(-1px); box-shadow: 0 6px 12px rgba(31, 28, 26, 0.12); }
@@ -351,7 +346,8 @@ p {
   font-weight: 500;
 }
 .field input,
-.field textarea {
+.field textarea,
+.field select {
   border-radius: 14px;
   border: 1px solid var(--line);
   padding: 12px 14px;
@@ -360,7 +356,8 @@ p {
   resize: vertical;
 }
 .field input:focus,
-.field textarea:focus {
+.field textarea:focus,
+.field select:focus {
   outline: 2px solid rgba(240, 165, 0, 0.45);
   border-color: var(--accent);
 }

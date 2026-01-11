@@ -30,6 +30,7 @@ WIP limit: 5 active delegates. Update cards with evidence links.
 - `docs/kanban/cards/feature-codex-cli-auth-prompt.md`
 - `docs/kanban/cards/feature-codex-cli-authenticated.md`
 - `docs/kanban/cards/feature-codex-cli-missing.md`
+- `docs/kanban/cards/feature-github-pr-happy-path.md` — Done: added Create PR modal, base branch selection, PR status/evidence, and BDD coverage.
 - `docs/kanban/cards/feature-copilot-cli-enable.md`
 - `docs/kanban/cards/feature-copilot-cli-autocomplete.md`
 - `docs/kanban/cards/feature-copilot-cli-not-installed.md` — Done: added install instructions messaging, enablement guard, and BDD evidence.
