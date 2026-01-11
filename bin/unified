@@ -5,6 +5,7 @@ const path = require('path');
 
 const AUTH_TOKEN_ENV = 'UNIFIED_AUTH_TOKEN';
 const AUTH_FILE_ENV = 'UNIFIED_AUTH_FILE';
+const CODEX_CLI_ENV = 'CODEX_CLI_PATH';
 
 function printHelp() {
   console.log(`Usage: unified <command>
@@ -72,6 +73,34 @@ function isAuthenticated() {
   return Boolean(fileToken && String(fileToken).trim());
 }
 
+function resolveCodexCliPath() {
+  const override = process.env[CODEX_CLI_ENV];
+  if (override && override.trim()) {
+    return override;
+  }
+  const searchPath = process.env.PATH || '';
+  const entries = searchPath.split(path.delimiter).filter(Boolean);
+  const extensions = process.platform === 'win32' ? ['.exe', '.cmd', '.bat', ''] : [''];
+  for (const entry of entries) {
+    for (const ext of extensions) {
+      const candidate = path.join(entry, `codex${ext}`);
+      if (fs.existsSync(candidate)) {
+        return candidate;
+      }
+    }
+  }
+  return null;
+}
+
+function ensureCodexCliAvailable() {
+  const codexPath = resolveCodexCliPath();
+  if (!codexPath) {
+    console.error('Codex CLI is required. Install it to continue.');
+    return false;
+  }
+  return true;
+}
+
 function handleAuthLogin(forceReauth) {
   const token = createPairingToken();
   const deviceName = defaultDeviceName();
@@ -122,6 +151,11 @@ function handleCodexCommand() {
 
   if (!isAuthenticated()) {
     console.error('Authentication incomplete. Unable to start Codex session.');
+    process.exitCode = 1;
+    return;
+  }
+
+  if (!ensureCodexCliAvailable()) {
     process.exitCode = 1;
     return;
   }

@@ -91,6 +91,38 @@ def cli_mentions_connected_message(source):
     return "Connected for remote access" in source
 
 
+def cli_resolves_codex_cli_path(source):
+    body = extract_function_body(source, "resolveCodexCliPath")
+    if not body:
+        return False
+    return "PATH" in body and "codex" in body
+
+
+def cli_ensures_codex_cli_available(source):
+    body = extract_function_body(source, "ensureCodexCliAvailable")
+    if not body:
+        return False
+    return "Codex CLI is required" in body
+
+
+def cli_mentions_codex_cli_required(source):
+    return "Codex CLI is required" in source
+
+
+def cli_blocks_start_when_codex_missing(source):
+    body = extract_function_body(source, "handleCodexCommand")
+    if not body:
+        return False
+    guard_pattern = r"if\s*\(!ensureCodexCliAvailable\(\)\)\s*\{[^}]*return"
+    if not re.search(guard_pattern, body, re.DOTALL):
+        return False
+    missing_index = body.find("ensureCodexCliAvailable")
+    start_index = body.find("startCodexSession")
+    if missing_index == -1 or start_index == -1:
+        return False
+    return missing_index < start_index
+
+
 @given("I am authenticated with the product")
 def step_authenticated(context):
     cli_source = get_cli_source(context)
@@ -105,6 +137,14 @@ def step_not_authenticated(context):
     assert cli_defines_auth_token(cli_source), "Unified CLI missing auth token support"
     assert cli_checks_auth_for_codex(cli_source), "Unified CLI does not check auth before starting Codex"
     assert cli_starts_auth_flow_for_codex(cli_source), "Unified CLI does not start auth flow for Codex"
+    context.cli_source = cli_source
+
+
+@given("Codex CLI is not installed")
+def step_codex_cli_missing(context):
+    cli_source = get_cli_source(context)
+    assert cli_resolves_codex_cli_path(cli_source), "Unified CLI does not look for the Codex CLI binary"
+    assert cli_ensures_codex_cli_available(cli_source), "Unified CLI does not guard against missing Codex CLI"
     context.cli_source = cli_source
 
 
@@ -141,3 +181,15 @@ def step_codex_after_auth(context):
     assert cli_auth_flow_completes(cli_source), "Authentication flow does not complete"
     assert cli_auth_flow_precedes_session_start(cli_source), "Codex starts before auth flow completes"
     assert cli_mentions_codex_start(cli_source), "Codex session start message missing"
+
+
+@then("I see an error indicating Codex CLI is required")
+def step_codex_cli_error(context):
+    cli_source = context.cli_source
+    assert cli_mentions_codex_cli_required(cli_source), "Codex CLI required error message missing"
+
+
+@then("the session does not start")
+def step_codex_cli_no_session(context):
+    cli_source = context.cli_source
+    assert cli_blocks_start_when_codex_missing(cli_source), "Codex session start is not blocked when CLI is missing"

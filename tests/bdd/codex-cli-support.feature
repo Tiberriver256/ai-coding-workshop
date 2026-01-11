@@ -17,3 +17,10 @@ Feature: Codex CLI support for remote sessions
     When I run "unified codex"
     Then the product starts the authentication flow
     And the Codex session starts after authentication completes
+
+  Scenario: Codex CLI is not installed locally
+    Given I am authenticated with the product
+    And Codex CLI is not installed
+    When I run "unified codex"
+    Then I see an error indicating Codex CLI is required
+    And the session does not start
