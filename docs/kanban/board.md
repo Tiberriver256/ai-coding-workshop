@@ -38,6 +38,7 @@ WIP limit: 5 active delegates. Update cards with evidence links.
 - `docs/kanban/cards/feature-kanban-board-search.md`
 - `docs/kanban/cards/feature-device-pairing-qr-happy-path.md`
 - `docs/kanban/cards/feature-device-pairing-manual-link.md`
+- `docs/kanban/cards/feature-device-pairing-reject.md`
 - `docs/kanban/cards/demo-assets-gap.md`
 - `docs/kanban/cards/demo-assets-production.md`
 - `docs/kanban/cards/sprint-review-2026-01-11.md`

@@ -46,6 +46,8 @@ function handleAuthLogin() {
   console.log('QR code:');
   console.log(renderQrPlaceholder(token));
   console.log(`Fallback link: ${pairingLink}`);
+  console.log('Status: Awaiting approval in the mobile app.');
+  console.log('If rejected, this screen will show: Pairing request rejected.');
 }
 
 function main() {

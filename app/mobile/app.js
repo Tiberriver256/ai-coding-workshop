@@ -14,6 +14,7 @@ const manualLinkInput = document.getElementById('manual-link-input');
 const manualLinkButton = document.getElementById('submit-link');
 const manualLinkStatus = document.getElementById('manual-link-status');
 const approvePairingButton = document.getElementById('approve-pairing');
+const rejectPairingButton = document.getElementById('reject-pairing');
 const deviceList = document.getElementById('device-list');
 const deviceCount = document.getElementById('device-count');
 
@@ -176,18 +177,35 @@ function ingestPairingLink() {
   applyPairingParams(params);
 }
 function renderPairingRequest() {
-  if (!pairingDetails || !pairingStatus || !approvePairingButton) {
+  if (!pairingDetails || !pairingStatus || !approvePairingButton || !rejectPairingButton) {
     return;
   }
-  if (!pairingRequest || pairingRequest.status !== 'pending') {
+  if (!pairingRequest) {
     pairingStatus.textContent = 'None';
     pairingDetails.textContent = 'No pending pairing requests.';
     approvePairingButton.disabled = true;
+    rejectPairingButton.disabled = true;
     return;
   }
-  pairingStatus.textContent = 'Pending';
-  pairingDetails.textContent = `${pairingRequest.deviceName} is requesting access.`;
-  approvePairingButton.disabled = false;
+  const deviceName = pairingRequest.deviceName || 'New computer';
+  if (pairingRequest.status === 'pending') {
+    pairingStatus.textContent = 'Pending';
+    pairingDetails.textContent = `${deviceName} is requesting access.`;
+    approvePairingButton.disabled = false;
+    rejectPairingButton.disabled = false;
+    return;
+  }
+  if (pairingRequest.status === 'rejected') {
+    pairingStatus.textContent = 'Rejected';
+    pairingDetails.textContent = `${deviceName} pairing request was rejected.`;
+    approvePairingButton.disabled = true;
+    rejectPairingButton.disabled = true;
+    return;
+  }
+  pairingStatus.textContent = 'None';
+  pairingDetails.textContent = 'No pending pairing requests.';
+  approvePairingButton.disabled = true;
+  rejectPairingButton.disabled = true;
 }
 function approvePairingRequest() {
   if (!pairingRequest || pairingRequest.status !== 'pending') {
@@ -207,6 +225,19 @@ function approvePairingRequest() {
   renderPairingRequest();
   renderDeviceList();
   updateStatusPill();
+}
+
+function rejectPairingRequest() {
+  if (!pairingRequest || pairingRequest.status !== 'pending') {
+    return;
+  }
+  const timestamp = new Date().toISOString();
+  const deviceName = pairingRequest.deviceName || 'New computer';
+  pairingRequest = { ...pairingRequest, status: 'rejected', rejectedAt: timestamp };
+  savePairingRequest(pairingRequest);
+  setManualLinkStatus(`Rejected pairing for ${deviceName}.`, 'error');
+  renderPairingRequest();
+  updateTimestamp();
 }
 function submitManualLink() {
   if (!manualLinkInput) {
@@ -344,6 +375,9 @@ window.addEventListener('storage', (event) => {
 
 if (approvePairingButton) {
   approvePairingButton.addEventListener('click', approvePairingRequest);
+}
+if (rejectPairingButton) {
+  rejectPairingButton.addEventListener('click', rejectPairingRequest);
 }
 if (manualLinkButton) {
   manualLinkButton.addEventListener('click', submitManualLink);

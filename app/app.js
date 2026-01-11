@@ -227,6 +227,7 @@ function updatePairingStatus() {
   if (!pairingStatus) { return; }
   if (Array.isArray(pairedDevices) && pairedDevices.length > 0) { pairingStatus.textContent = `${pairedDevices.length} device${pairedDevices.length === 1 ? '' : 's'} paired.`; return; }
   if (pairingRequest && pairingRequest.status === 'pending') { pairingStatus.textContent = 'Pairing request awaiting approval.'; return; }
+  if (pairingRequest && pairingRequest.status === 'rejected') { pairingStatus.textContent = 'Pairing request rejected.'; return; }
   pairingStatus.textContent = 'No devices paired yet.';
 }
 function openTaskModal() { taskModal.setAttribute('aria-hidden', 'false'); taskModal.setAttribute('data-state', 'open'); titleInput.focus(); }

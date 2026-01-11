@@ -46,6 +46,10 @@ def cli_has_fallback_link(source):
     return "Fallback link" in source or "connection link" in source
 
 
+def cli_mentions_rejection(source):
+    return bool(re.search(r"reject", source, re.IGNORECASE))
+
+
 def js_has_function(source, name):
     return bool(re.search(rf"function\s+{re.escape(name)}\s*\(", source))
 
@@ -57,6 +61,10 @@ def js_has_click_handler(source, element_id, function_name):
 
 def js_reads_pairing_param(source):
     return "URLSearchParams" in source and "pairing" in source
+
+
+def js_ingests_pairing_link(source):
+    return js_has_function(source, "ingestPairingLink") and "ingestPairingLink()" in source
 
 
 def js_parses_manual_link(source):
@@ -78,6 +86,21 @@ def js_approves_pairing(source):
         return False
     body = body_match.group(1)
     return "savePairedDevices" in body or "pairedDevices" in body
+
+
+def js_rejects_pairing(source):
+    if not js_has_function(source, "rejectPairingRequest"):
+        return False
+    body_match = re.search(
+        r"function\s+rejectPairingRequest\s*\([^)]*\)\s*\{([\s\S]*?)\n\}",
+        source,
+    )
+    if not body_match:
+        return False
+    body = body_match.group(1)
+    marks_rejected = bool(re.search(r"rejected", body, re.IGNORECASE))
+    avoids_pairing = "savePairedDevices" not in body
+    return marks_rejected and avoids_pairing
 
 
 def js_renders_device_list(source):
@@ -148,6 +171,13 @@ def step_paste_link_into_mobile(context):
     )
 
 
+@when("I open a valid connection link in the mobile app")
+def step_open_valid_link(context):
+    mobile_js = context.device_state["mobile_js"]
+    assert js_reads_pairing_param(mobile_js), "Mobile app does not read pairing link parameters"
+    assert js_ingests_pairing_link(mobile_js), "Mobile app does not ingest pairing links"
+
+
 @when("I approve the pairing request")
 def step_approve_pairing(context):
     mobile_html = context.device_state["mobile_html"]
@@ -159,11 +189,28 @@ def step_approve_pairing(context):
     assert js_approves_pairing(mobile_js), "Approve pairing does not store paired device"
 
 
+@when("I reject the pairing request")
+def step_reject_pairing(context):
+    mobile_html = context.device_state["mobile_html"]
+    mobile_js = context.device_state["mobile_js"]
+    assert has_id(mobile_html, "reject-pairing"), "Reject pairing button missing"
+    assert js_has_click_handler(mobile_js, "reject-pairing", "rejectPairingRequest"), (
+        "Reject pairing button is not wired"
+    )
+    assert js_rejects_pairing(mobile_js), "Reject pairing does not mark request rejected"
+
+
 @then("the computer is paired to my account")
 def step_computer_paired(context):
     mobile_js = context.device_state["mobile_js"]
     assert "slice0001.devices" in mobile_js, "Paired devices storage key missing"
     assert js_approves_pairing(mobile_js), "Pairing approval does not record device"
+
+
+@then("the computer is not paired to my account")
+def step_computer_not_paired(context):
+    mobile_js = context.device_state["mobile_js"]
+    assert js_rejects_pairing(mobile_js), "Rejection does not avoid pairing the device"
 
 
 @then("the computer appears in the app's device list")
@@ -177,3 +224,9 @@ def step_device_in_list(context):
     assert has_id(mobile_html, "device-list"), "Mobile device list container missing"
     assert js_renders_device_list(desktop_js), "Desktop device list renderer missing"
     assert js_renders_device_list(mobile_js), "Mobile device list renderer missing"
+
+
+@then("the CLI shows that the request was rejected")
+def step_cli_rejected(context):
+    cli_source = context.device_state["cli_source"]
+    assert cli_mentions_rejection(cli_source), "CLI does not mention rejection state"
