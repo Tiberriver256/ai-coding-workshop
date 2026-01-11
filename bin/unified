@@ -8,6 +8,7 @@ Commands:
   auth login    Pair this computer with the mobile app
 
 Options:
+  --force       Force re-authentication and re-pair the device
   --help        Show help
 `);
 }
@@ -23,11 +24,14 @@ function defaultDeviceName() {
   return hostname ? `${hostname} computer` : 'This computer';
 }
 
-function buildPairingLink(token, deviceName) {
+function buildPairingLink(token, deviceName, forceReauth) {
   const baseUrl = process.env.UNIFIED_MOBILE_URL || 'http://127.0.0.1:4173/mobile/';
   const url = new URL(baseUrl);
   url.searchParams.set('pairing', token);
   url.searchParams.set('device', deviceName);
+  if (forceReauth) {
+    url.searchParams.set('force', 'true');
+  }
   return url.toString();
 }
 
@@ -36,13 +40,16 @@ function renderQrPlaceholder(token) {
   return `${frame.join('\n')}\nToken: ${token}`;
 }
 
-function handleAuthLogin() {
+function handleAuthLogin(forceReauth) {
   const token = createPairingToken();
   const deviceName = defaultDeviceName();
-  const pairingLink = buildPairingLink(token, deviceName);
+  const pairingLink = buildPairingLink(token, deviceName, forceReauth);
 
   console.log('Pair using mobile QR');
   console.log('Option: Mobile QR pairing');
+  if (forceReauth) {
+    console.log('Mode: Force re-authentication');
+  }
   console.log('QR code:');
   console.log(renderQrPlaceholder(token));
   console.log(`Fallback link: ${pairingLink}`);
@@ -58,7 +65,8 @@ function main() {
   }
 
   if (args[0] === 'auth' && args[1] === 'login') {
-    handleAuthLogin();
+    const forceReauth = args.includes('--force');
+    handleAuthLogin(forceReauth);
     return;
   }
 

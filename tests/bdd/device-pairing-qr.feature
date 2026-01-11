@@ -34,3 +34,10 @@ Feature: Pair a computer using QR onboarding
     When I open an invalid connection link in the mobile app
     Then I see an invalid link message
     And I cannot approve the pairing
+
+  Scenario: Re-pair a computer after forcing re-authentication
+    Given my computer is already paired
+    When I run "unified auth login --force" on my computer
+    And I approve the new pairing request on my phone
+    Then the computer is re-paired
+    And the app shows the updated pairing status

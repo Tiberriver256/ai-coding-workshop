@@ -148,6 +148,13 @@ function isValidPairingToken(token) {
   }
   return /^pair_[a-z0-9]+_[a-z0-9]{6}$/.test(token);
 }
+function isForcePairing(value) {
+  if (value === null || value === undefined) {
+    return false;
+  }
+  const normalized = String(value).trim().toLowerCase();
+  return normalized === '' || normalized === 'true' || normalized === '1' || normalized === 'yes';
+}
 function getPairingParams() {
   const params = new URLSearchParams(window.location.search);
   if (!params.has('pairing')) {
@@ -157,9 +164,11 @@ function getPairingParams() {
   if (!isValidPairingToken(token)) {
     return { error: invalidPairingMessage };
   }
+  const forceParam = params.get('force');
   return {
     id: token,
     deviceName: params.get('device') || 'New computer',
+    force: isForcePairing(forceParam),
   };
 }
 function parsePairingLink(link) {
@@ -172,9 +181,11 @@ function parsePairingLink(link) {
     if (!token || !isValidPairingToken(token)) {
       return null;
     }
+    const forceParam = url.searchParams.get('force');
     return {
       id: token,
       deviceName: url.searchParams.get('device') || 'New computer',
+      force: isForcePairing(forceParam),
     };
   } catch (error) {
     return null;
@@ -192,6 +203,7 @@ function applyPairingParams(params) {
     id: params.id,
     deviceName: params.deviceName,
     status: 'pending',
+    force: Boolean(params.force),
     createdAt: new Date().toISOString(),
   };
   savePairingRequest(pairingRequest);
@@ -232,8 +244,10 @@ function renderPairingRequest() {
   }
   const deviceName = pairingRequest.deviceName || 'New computer';
   if (pairingRequest.status === 'pending') {
-    pairingStatus.textContent = 'Pending';
-    pairingDetails.textContent = `${deviceName} is requesting access.`;
+    pairingStatus.textContent = pairingRequest.force ? 'Re-auth' : 'Pending';
+    pairingDetails.textContent = pairingRequest.force
+      ? `${deviceName} is requesting re-authentication.`
+      : `${deviceName} is requesting access.`;
     approvePairingButton.disabled = false;
     rejectPairingButton.disabled = false;
     return;
@@ -241,6 +255,15 @@ function renderPairingRequest() {
   if (pairingRequest.status === 'rejected') {
     pairingStatus.textContent = 'Rejected';
     pairingDetails.textContent = `${deviceName} pairing request was rejected.`;
+    approvePairingButton.disabled = true;
+    rejectPairingButton.disabled = true;
+    return;
+  }
+  if (pairingRequest.status === 'approved') {
+    pairingStatus.textContent = pairingRequest.force ? 'Re-paired' : 'Approved';
+    pairingDetails.textContent = pairingRequest.force
+      ? `${deviceName} was re-paired successfully.`
+      : `${deviceName} pairing approved.`;
     approvePairingButton.disabled = true;
     rejectPairingButton.disabled = true;
     return;
@@ -255,10 +278,14 @@ function approvePairingRequest() {
     return;
   }
   const timestamp = new Date().toISOString();
+  const status = pairingRequest.force ? 're-paired' : 'paired';
+  const existingDevice = pairedDevices.find(
+    (device) => device && device.name === pairingRequest.deviceName
+  );
   const device = {
-    id: `device_${pairingRequest.id}`,
+    id: existingDevice ? existingDevice.id : `device_${pairingRequest.id}`,
     name: pairingRequest.deviceName,
-    status: 'paired',
+    status,
     pairedAt: timestamp,
   };
   pairedDevices = [device, ...pairedDevices.filter((item) => item.id !== device.id)];

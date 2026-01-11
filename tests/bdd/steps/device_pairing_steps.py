@@ -50,6 +50,12 @@ def cli_mentions_rejection(source):
     return bool(re.search(r"reject", source, re.IGNORECASE))
 
 
+def cli_supports_force_reauth(source):
+    has_force_flag = "--force" in source
+    has_force_link = "searchParams.set('force'" in source or 'searchParams.set("force"' in source or "force=true" in source
+    return has_force_flag and has_force_link
+
+
 def js_has_function(source, name):
     return bool(re.search(rf"function\s+{re.escape(name)}\s*\(", source))
 
@@ -122,6 +128,26 @@ def js_rejects_pairing(source):
 
 def js_renders_device_list(source):
     return js_has_function(source, "renderDeviceList")
+
+
+def js_handles_force_pairing(source):
+    if "force" not in source:
+        return False
+    has_param = "force" in source and ("params.get('force')" in source or "searchParams.get('force')" in source)
+    has_request_flag = "force" in source and ("pairingRequest.force" in source or "force:" in source)
+    return has_param and has_request_flag
+
+
+def js_marks_repaired_status(source):
+    if "re-paired" not in source and "repaired" not in source:
+        return False
+    return "status" in source and ("re-paired" in source or "repaired" in source)
+
+
+def js_shows_repaired_status(source):
+    if "pairingStatus" not in source:
+        return False
+    return "Re-paired" in source or "Repaired" in source
 
 
 @given("I am signed in on the mobile app")
@@ -266,3 +292,35 @@ def step_cannot_approve_pairing(context):
 def step_cli_rejected(context):
     cli_source = context.device_state["cli_source"]
     assert cli_mentions_rejection(cli_source), "CLI does not mention rejection state"
+
+
+@given("my computer is already paired")
+def step_computer_already_paired(context):
+    mobile_js = context.device_state["mobile_js"]
+    assert "pairedDevicesKey" in mobile_js, "Paired devices storage key missing"
+    assert "loadPairedDevices" in mobile_js, "Paired devices loader missing"
+
+
+@when('I run "unified auth login --force" on my computer')
+def step_run_auth_login_force(context):
+    cli_source = context.device_state["cli_source"]
+    assert cli_supports_force_reauth(cli_source), "Unified CLI does not support forced re-authentication"
+
+
+@when("I approve the new pairing request on my phone")
+def step_approve_new_pairing(context):
+    mobile_js = context.device_state["mobile_js"]
+    assert js_handles_force_pairing(mobile_js), "Mobile app does not handle force re-pair requests"
+    assert js_approves_pairing(mobile_js), "Approve pairing does not store paired device"
+
+
+@then("the computer is re-paired")
+def step_computer_repaired(context):
+    mobile_js = context.device_state["mobile_js"]
+    assert js_marks_repaired_status(mobile_js), "Re-pair status not recorded for device"
+
+
+@then("the app shows the updated pairing status")
+def step_app_shows_updated_status(context):
+    mobile_js = context.device_state["mobile_js"]
+    assert js_shows_repaired_status(mobile_js), "Updated pairing status not shown in the app"
