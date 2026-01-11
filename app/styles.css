@@ -141,6 +141,12 @@ p {
 .activity-log { margin-top: 16px; display: grid; gap: 8px; }
 .activity-item { border-radius: 14px; border: 1px solid var(--line); background: #fff9ed; padding: 10px 12px; font-size: 0.85rem; color: #5a4c32; display: flex; justify-content: space-between; gap: 12px; }
 .activity-time { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; color: #8a8278; }
+.search-panel { margin-top: 24px; background: var(--panel); border-radius: var(--radius); border: 1px solid var(--line); padding: 20px 28px; box-shadow: var(--shadow); }
+.search-content { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.search-input { display: grid; gap: 8px; min-width: 240px; }
+.search-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.18em; color: var(--muted); }
+.search-input input { border-radius: 999px; border: 1px solid var(--line); padding: 12px 18px; font-family: inherit; font-size: 0.95rem; background: #fff; min-width: 240px; }
+.search-input input:focus { outline: 2px solid rgba(240, 165, 0, 0.45); border-color: var(--accent); }
 .board {
   margin-top: 32px;
   display: grid;
@@ -189,6 +195,7 @@ p {
   display: grid;
   gap: 14px;
 }
+.task-list.drag-target { outline: 2px dashed rgba(240, 165, 0, 0.6); outline-offset: 8px; background: rgba(240, 165, 0, 0.08); border-radius: 16px; }
 .task-card {
   background: var(--panel);
   border-radius: 18px;
@@ -196,6 +203,9 @@ p {
   border: 1px solid var(--line);
   box-shadow: 0 6px 18px rgba(31, 28, 26, 0.08);
 }
+.task-card[draggable='true'] { cursor: grab; }
+.task-card[draggable='true']:active { cursor: grabbing; }
+.task-card.is-dragging { opacity: 0.65; box-shadow: none; }
 .task-card.done {
   background: #f8f8f5;
   border-color: #d9d6cf;
@@ -246,24 +256,8 @@ p {
   transform: translateY(-1px);
   box-shadow: 0 6px 12px rgba(31, 28, 26, 0.12);
 }
-.task-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: #6d6a66;
-  margin-top: 8px;
-}
-.task-status::before {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: #7aa75c;
-  display: inline-block;
-}
+.task-status { display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; color: #6d6a66; margin-top: 8px; }
+.task-status::before { content: ''; width: 8px; height: 8px; border-radius: 999px; background: #7aa75c; display: inline-block; }
 .modal-copy {
   color: var(--muted);
   margin: 0 0 20px;
@@ -478,6 +472,14 @@ p {
   .activity-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+  .search-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .search-input,
+  .search-input input {
+    width: 100%;
   }
   .primary,
   .ghost {

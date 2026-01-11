@@ -18,3 +18,14 @@ Feature: Kanban board for coding tasks
     Then the task moves to In Review
     When the task is merged
     Then the task moves to Done
+
+  Scenario: Manually move a task without triggering agent work
+    Given I am viewing the kanban board
+    When I drag a task to another column
+    Then the task appears in the target column
+    And no agent action is triggered solely by the drag
+
+  Scenario: Search tasks on the board
+    Given there are many tasks on the board
+    When I enter text into the search field
+    Then only tasks matching the search are shown

@@ -5,10 +5,11 @@ const assistantSuggestionTemplates = ['Draft a step-by-step plan with milestones
 const activityTaskId = 'task_agent_activity_demo';
 const activityEvidenceTypes = { attempt_started: 'attempt_started', attempt_completed: 'attempt_completed', task_merged: 'task_merged' };
 const activityEvidenceLabels = { attempt_started: 'Attempt started', attempt_completed: 'Attempt completed', task_merged: 'Merged into main' };
-const todoList = document.getElementById('todo-list'), todoCount = document.getElementById('todo-count'), inProgressList = document.getElementById('in-progress-list'), inProgressCount = document.getElementById('in-progress-count'), inReviewList = document.getElementById('in-review-list'), inReviewCount = document.getElementById('in-review-count'), doneList = document.getElementById('done-list'), doneCount = document.getElementById('done-count'), taskModal = document.getElementById('task-modal'), openModalButton = document.getElementById('open-modal'), closeModalButton = document.getElementById('close-modal'), cancelModalButton = document.getElementById('cancel-modal'), form = document.getElementById('task-form'), titleInput = document.getElementById('task-title'), descriptionInput = document.getElementById('task-description'), assistantPanel = document.getElementById('assistant-panel'), assistantToggle = document.getElementById('assistant-toggle'), assistantSuggestButton = document.getElementById('assistant-suggest'), assistantSuggestions = document.getElementById('assistant-suggestions'), titleError = document.getElementById('title-error'), connectModal = document.getElementById('connect-modal'), openConnectButton = document.getElementById('open-connect'), closeConnectButton = document.getElementById('close-connect'), qrCodeContainer = document.getElementById('qr-code'), mobileUrlInput = document.getElementById('mobile-url'), copyLinkButton = document.getElementById('copy-link'), activityPanel = document.getElementById('agent-activity'), activityTaskTitle = document.getElementById('activity-task-title'), activityStartButton = document.getElementById('activity-start'), activityCompleteButton = document.getElementById('activity-complete'), activityMergeButton = document.getElementById('activity-merge'), activityLog = document.getElementById('activity-log');
+const todoList = document.getElementById('todo-list'), todoCount = document.getElementById('todo-count'), inProgressList = document.getElementById('in-progress-list'), inProgressCount = document.getElementById('in-progress-count'), inReviewList = document.getElementById('in-review-list'), inReviewCount = document.getElementById('in-review-count'), doneList = document.getElementById('done-list'), doneCount = document.getElementById('done-count'), taskModal = document.getElementById('task-modal'), openModalButton = document.getElementById('open-modal'), closeModalButton = document.getElementById('close-modal'), cancelModalButton = document.getElementById('cancel-modal'), form = document.getElementById('task-form'), titleInput = document.getElementById('task-title'), descriptionInput = document.getElementById('task-description'), assistantPanel = document.getElementById('assistant-panel'), assistantToggle = document.getElementById('assistant-toggle'), assistantSuggestButton = document.getElementById('assistant-suggest'), assistantSuggestions = document.getElementById('assistant-suggestions'), titleError = document.getElementById('title-error'), connectModal = document.getElementById('connect-modal'), openConnectButton = document.getElementById('open-connect'), closeConnectButton = document.getElementById('close-connect'), qrCodeContainer = document.getElementById('qr-code'), mobileUrlInput = document.getElementById('mobile-url'), copyLinkButton = document.getElementById('copy-link'), activityPanel = document.getElementById('agent-activity'), activityTaskTitle = document.getElementById('activity-task-title'), activityStartButton = document.getElementById('activity-start'), activityCompleteButton = document.getElementById('activity-complete'), activityMergeButton = document.getElementById('activity-merge'), activityLog = document.getElementById('activity-log'), searchInput = document.getElementById('task-search');
 let tasks = loadTasks();
 let assistantEnabled = false;
 let assistantDrafts = [];
+let searchQuery = '';
 const statusAliases = { todo: 'todo', 'in progress': 'in_progress', 'in-progress': 'in_progress', in_progress: 'in_progress', 'in review': 'in_review', 'in-review': 'in_review', in_review: 'in_review', done: 'done' };
 const columnConfig = [
   { key: 'todo', list: todoList, count: todoCount, emptyMessage: 'No tasks yet. Create one to get started.', showCompleteAction: true },
@@ -53,6 +54,25 @@ function normalizeTask(task) {
 }
 function normalizeStatus(status) { if (typeof status !== 'string') { return 'todo'; } const normalized = status.trim().toLowerCase(); return statusAliases[normalized] || 'todo'; }
 function saveTasks() { localStorage.setItem(storageKey, JSON.stringify(tasks)); }
+function normalizeSearchQuery(value) { return typeof value === 'string' ? value.trim().toLowerCase() : ''; }
+function taskMatchesSearch(task, query) {
+  if (!query) {
+    return true;
+  }
+  const haystack = [task.title, task.description].filter(Boolean).join(' ').toLowerCase();
+  return haystack.includes(query);
+}
+function getVisibleTasks() {
+  const query = searchQuery;
+  if (!query) {
+    return tasks;
+  }
+  return tasks.filter((task) => taskMatchesSearch(task, query));
+}
+function setSearchQuery(value) {
+  searchQuery = normalizeSearchQuery(value);
+  renderTasks();
+}
 function createTaskId() { return `task_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
 function createAttemptId() { return `attempt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
 function createEvidenceId() { return `evidence_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
@@ -75,7 +95,8 @@ function renderTasks() {
     in_review: [],
     done: [],
   };
-  tasks.forEach((task) => {
+  const visibleTasks = getVisibleTasks();
+  visibleTasks.forEach((task) => {
     const status = normalizeStatus(task.status);
     grouped[status].push(task);
   });
@@ -110,6 +131,10 @@ function renderTaskList(listElement, list, options) {
     const card = document.createElement('article');
     card.className = `task-card${task.status === 'done' ? ' done' : ''}`;
     card.setAttribute('role', 'listitem');
+    card.setAttribute('draggable', 'true');
+    card.dataset.taskId = task.id;
+    card.addEventListener('dragstart', handleTaskDragStart);
+    card.addEventListener('dragend', handleTaskDragEnd);
     const title = document.createElement('h4');
     title.textContent = task.title;
     const description = document.createElement('p');
@@ -159,6 +184,14 @@ function renderTaskList(listElement, list, options) {
     listElement.appendChild(card);
   });
 }
+function getStatusForList(listElement) { const column = columnConfig.find((entry) => entry.list === listElement); return column ? column.key : null; }
+function moveTaskToStatus(taskId, targetStatus) { const task = findTaskById(taskId); if (!task) { return false; } const normalized = normalizeStatus(targetStatus); if (task.status === normalized) { return false; } task.status = normalized; task.updatedAt = new Date().toISOString(); saveTasks(); renderTasks(); return true; }
+function handleTaskDragStart(event) { const card = event.currentTarget; const taskId = card?.dataset?.taskId; if (!taskId || !event.dataTransfer) { return; } event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', taskId); card.classList.add('is-dragging'); }
+function handleTaskDragEnd(event) { const card = event.currentTarget; if (card) { card.classList.remove('is-dragging'); } columnConfig.forEach((column) => { column.list.classList.remove('drag-target'); }); }
+function handleTaskDragOver(event) { event.preventDefault(); if (event.dataTransfer) { event.dataTransfer.dropEffect = 'move'; } event.currentTarget.classList.add('drag-target'); }
+function handleTaskDragLeave(event) { event.currentTarget.classList.remove('drag-target'); }
+function handleTaskDrop(event) { event.preventDefault(); const list = event.currentTarget; list.classList.remove('drag-target'); const taskId = event.dataTransfer?.getData('text/plain'); const targetStatus = getStatusForList(list); if (!taskId || !targetStatus) { return; } moveTaskToStatus(taskId, targetStatus); }
+function registerColumnDropTargets() { columnConfig.forEach((column) => { column.list.addEventListener('dragover', handleTaskDragOver); column.list.addEventListener('dragleave', handleTaskDragLeave); column.list.addEventListener('drop', handleTaskDrop); }); }
 function renderActivityLog(task) {
   if (!activityLog) { return; }
   activityLog.innerHTML = '';
@@ -329,6 +362,12 @@ titleInput.addEventListener('input', () => {
     clearValidation();
   }
 });
+if (searchInput) {
+  searchQuery = normalizeSearchQuery(searchInput.value);
+  searchInput.addEventListener('input', (event) => {
+    setSearchQuery(event.target.value);
+  });
+}
 if (assistantToggle) {
   assistantToggle.addEventListener('change', (event) => {
     setAssistantEnabled(event.target.checked);
@@ -351,6 +390,7 @@ if (assistantSuggestions) {
 if (activityStartButton) { activityStartButton.addEventListener('click', () => startTaskAttempt(activityTaskId)); }
 if (activityCompleteButton) { activityCompleteButton.addEventListener('click', () => completeTaskAttempt(activityTaskId)); }
 if (activityMergeButton) { activityMergeButton.addEventListener('click', () => mergeTask(activityTaskId)); }
+registerColumnDropTargets();
 setAssistantEnabled(Boolean(assistantToggle?.checked));
 form.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -373,17 +413,7 @@ form.addEventListener('submit', (event) => {
 function startTaskAttempt(taskId) { const task = findTaskById(taskId); if (!task) { return; } const attempt = createAttempt(defaultAgentConfig); const attempts = Array.isArray(task.attempts) ? task.attempts : []; task.attempts = [attempt, ...attempts]; task.activeAttemptId = attempt.id; task.status = 'in_progress'; recordEvidence(task, activityEvidenceTypes.attempt_started, 'Attempt started'); saveTasks(); renderTasks(); }
 function completeTaskAttempt(taskId) { const task = findTaskById(taskId); if (!task) { return; } const timestamp = new Date().toISOString(); const activeAttempt = getActiveAttempt(task); if (activeAttempt) { activeAttempt.status = 'completed'; activeAttempt.updatedAt = timestamp; } task.status = 'in_review'; recordEvidence(task, activityEvidenceTypes.attempt_completed, 'Attempt completed'); saveTasks(); renderTasks(); }
 function mergeTask(taskId) { const task = findTaskById(taskId); if (!task) { return; } task.status = 'done'; recordEvidence(task, activityEvidenceTypes.task_merged, 'Merged to main'); saveTasks(); renderTasks(); }
-function markTaskDone(taskId) {
-  const index = tasks.findIndex((task) => task.id === taskId);
-  if (index === -1) {
-    return;
-  }
-  const timestamp = new Date().toISOString();
-  const task = tasks[index];
-  tasks[index] = { ...task, status: 'done', updatedAt: timestamp };
-  saveTasks();
-  renderTasks();
-}
+function markTaskDone(taskId) { moveTaskToStatus(taskId, 'done'); }
 function getMobileUrl() {
   return new URL('mobile/', window.location.href).toString();
 }

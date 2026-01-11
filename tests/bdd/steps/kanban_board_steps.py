@@ -131,6 +131,54 @@ def has_activity_task_seed(js_source):
     return bool(seed_present and (todo_in_create or todo_in_seed))
 
 
+def extract_function_body(js_source, function_name):
+    match = re.search(rf"function\s+{re.escape(function_name)}\s*\([^)]*\)\s*\{{", js_source)
+    if not match:
+        return ""
+    start = match.end()
+    brace_depth = 1
+    index = start
+    while index < len(js_source):
+        char = js_source[index]
+        if char == "{":
+            brace_depth += 1
+        elif char == "}":
+            brace_depth -= 1
+            if brace_depth == 0:
+                return js_source[start:index]
+        index += 1
+    return ""
+
+
+def function_body_contains(js_source, function_name, fragment):
+    body = extract_function_body(js_source, function_name)
+    return fragment in body
+
+
+def has_drag_handler(js_source, event_name, function_name):
+    pattern = rf"addEventListener\(\s*['\"]{re.escape(event_name)}['\"][\s\S]*?{re.escape(function_name)}"
+    return bool(re.search(pattern, js_source))
+
+
+def has_input_handler(js_source, element_id, function_name):
+    pattern = rf"{re.escape(element_id)}[\s\S]*?addEventListener\(\s*['\"]input['\"][\s\S]*?{re.escape(function_name)}"
+    return bool(re.search(pattern, js_source))
+
+
+def function_searches_text(js_source, function_name):
+    body = extract_function_body(js_source, function_name)
+    if not body:
+        return False
+    return "task.title" in body and "task.description" in body and "includes" in body
+
+
+def function_filters_tasks(js_source, function_name, matcher_name):
+    body = extract_function_body(js_source, function_name)
+    if not body:
+        return False
+    return "tasks.filter" in body and matcher_name in body
+
+
 @given("a project has tasks in multiple statuses")
 def step_project_has_tasks(context):
     context.kanban_state["columns"] = list(COLUMN_HEADINGS)
@@ -256,3 +304,90 @@ def step_task_moves_done(context):
     task = context.kanban_state["task"]
     assert task.get("status") == "done", "Task did not move to Done"
     assert "task_merged" in context.kanban_state["evidence"], "Merge evidence missing"
+
+
+@given("I am viewing the kanban board")
+def step_viewing_kanban_board(context):
+    html = load_html()
+    js_source = load_js()
+    assert has_id(html, "todo-list"), "To Do column list missing"
+    assert has_id(html, "in-progress-list"), "In Progress column list missing"
+    assert has_id(html, "in-review-list"), "In Review column list missing"
+    assert has_id(html, "done-list"), "Done column list missing"
+    context.kanban_state = {
+        "html": html,
+        "js": js_source,
+        "task": {"id": "task_manual_move_demo", "status": "todo"},
+        "target_status": "in_review",
+    }
+
+
+@when("I drag a task to another column")
+def step_drag_task_to_column(context):
+    js_source = context.kanban_state["js"]
+    assert has_function(js_source, "handleTaskDragStart"), "Drag start handler missing"
+    assert has_function(js_source, "handleTaskDrop"), "Drop handler missing"
+    assert has_function(js_source, "moveTaskToStatus"), "Manual move handler missing"
+    assert has_drag_handler(js_source, "dragstart", "handleTaskDragStart"), (
+        "Drag start handler is not wired"
+    )
+    assert has_drag_handler(js_source, "drop", "handleTaskDrop"), "Drop handler is not wired"
+    assert function_body_contains(js_source, "handleTaskDrop", "moveTaskToStatus"), (
+        "Drop handler does not move tasks"
+    )
+    context.kanban_state["task"]["status"] = context.kanban_state["target_status"]
+
+
+@then("the task appears in the target column")
+def step_task_in_target_column(context):
+    task = context.kanban_state["task"]
+    assert task.get("status") == context.kanban_state["target_status"], (
+        "Task did not move to the target column"
+    )
+
+
+@then("no agent action is triggered solely by the drag")
+def step_no_agent_action_triggered(context):
+    js_source = context.kanban_state["js"]
+    assert not function_body_contains(js_source, "moveTaskToStatus", "recordEvidence"), (
+        "Manual move should not record evidence"
+    )
+    assert not function_body_contains(js_source, "handleTaskDrop", "recordEvidence"), (
+        "Drop handler should not record evidence"
+    )
+
+
+@given("there are many tasks on the board")
+def step_many_tasks_on_board(context):
+    html = load_html()
+    js_source = load_js()
+    assert has_id(html, "task-search"), "Search input missing"
+    context.kanban_state = {"html": html, "js": js_source}
+
+
+@when("I enter text into the search field")
+def step_enter_search_text(context):
+    js_source = context.kanban_state["js"]
+    assert has_function(js_source, "setSearchQuery"), "Search setter missing"
+    assert has_function(js_source, "taskMatchesSearch"), "Search matcher missing"
+    assert has_function(js_source, "getVisibleTasks"), "Search filter missing"
+    assert has_input_handler(js_source, "task-search", "setSearchQuery"), (
+        "Search input is not wired"
+    )
+    assert function_body_contains(js_source, "setSearchQuery", "renderTasks"), (
+        "Search setter does not re-render tasks"
+    )
+
+
+@then("only tasks matching the search are shown")
+def step_tasks_filtered_by_search(context):
+    js_source = context.kanban_state["js"]
+    assert function_searches_text(js_source, "taskMatchesSearch"), (
+        "Search does not inspect task title and description"
+    )
+    assert function_filters_tasks(js_source, "getVisibleTasks", "taskMatchesSearch"), (
+        "Search filter does not use task matcher"
+    )
+    assert function_body_contains(js_source, "renderTasks", "getVisibleTasks"), (
+        "Render does not apply search filtering"
+    )
