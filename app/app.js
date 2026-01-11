@@ -1,12 +1,16 @@
 const storageKey = 'slice0001.tasks';
+const pairingRequestKey = 'slice0001.pairing_request';
+const pairedDevicesKey = 'slice0001.devices';
 const defaultAttemptStatus = 'running';
 const defaultAgentConfig = { provider: 'OpenAI', model: 'gpt-4.1-mini', temperature: 0.2 };
 const assistantSuggestionTemplates = ['Draft a step-by-step plan with milestones and a clear definition of done.', 'List the files to inspect, the changes to make, and the tests to run.', 'Summarize the expected behavior and call out edge cases to verify.'];
 const activityTaskId = 'task_agent_activity_demo';
 const activityEvidenceTypes = { attempt_started: 'attempt_started', attempt_completed: 'attempt_completed', task_merged: 'task_merged' };
 const activityEvidenceLabels = { attempt_started: 'Attempt started', attempt_completed: 'Attempt completed', task_merged: 'Merged into main' };
-const todoList = document.getElementById('todo-list'), todoCount = document.getElementById('todo-count'), inProgressList = document.getElementById('in-progress-list'), inProgressCount = document.getElementById('in-progress-count'), inReviewList = document.getElementById('in-review-list'), inReviewCount = document.getElementById('in-review-count'), doneList = document.getElementById('done-list'), doneCount = document.getElementById('done-count'), taskModal = document.getElementById('task-modal'), openModalButton = document.getElementById('open-modal'), closeModalButton = document.getElementById('close-modal'), cancelModalButton = document.getElementById('cancel-modal'), form = document.getElementById('task-form'), titleInput = document.getElementById('task-title'), descriptionInput = document.getElementById('task-description'), assistantPanel = document.getElementById('assistant-panel'), assistantToggle = document.getElementById('assistant-toggle'), assistantSuggestButton = document.getElementById('assistant-suggest'), assistantSuggestions = document.getElementById('assistant-suggestions'), titleError = document.getElementById('title-error'), connectModal = document.getElementById('connect-modal'), openConnectButton = document.getElementById('open-connect'), closeConnectButton = document.getElementById('close-connect'), qrCodeContainer = document.getElementById('qr-code'), mobileUrlInput = document.getElementById('mobile-url'), copyLinkButton = document.getElementById('copy-link'), activityPanel = document.getElementById('agent-activity'), activityTaskTitle = document.getElementById('activity-task-title'), activityStartButton = document.getElementById('activity-start'), activityCompleteButton = document.getElementById('activity-complete'), activityMergeButton = document.getElementById('activity-merge'), activityLog = document.getElementById('activity-log'), searchInput = document.getElementById('task-search');
+const todoList = document.getElementById('todo-list'), todoCount = document.getElementById('todo-count'), inProgressList = document.getElementById('in-progress-list'), inProgressCount = document.getElementById('in-progress-count'), inReviewList = document.getElementById('in-review-list'), inReviewCount = document.getElementById('in-review-count'), doneList = document.getElementById('done-list'), doneCount = document.getElementById('done-count'), taskModal = document.getElementById('task-modal'), openModalButton = document.getElementById('open-modal'), closeModalButton = document.getElementById('close-modal'), cancelModalButton = document.getElementById('cancel-modal'), form = document.getElementById('task-form'), titleInput = document.getElementById('task-title'), descriptionInput = document.getElementById('task-description'), assistantPanel = document.getElementById('assistant-panel'), assistantToggle = document.getElementById('assistant-toggle'), assistantSuggestButton = document.getElementById('assistant-suggest'), assistantSuggestions = document.getElementById('assistant-suggestions'), titleError = document.getElementById('title-error'), connectModal = document.getElementById('connect-modal'), openConnectButton = document.getElementById('open-connect'), openPairingButton = document.getElementById('open-pairing'), closeConnectButton = document.getElementById('close-connect'), qrCodeContainer = document.getElementById('qr-code'), pairingLinkInput = document.getElementById('pairing-link'), copyLinkButton = document.getElementById('copy-link'), activityPanel = document.getElementById('agent-activity'), activityTaskTitle = document.getElementById('activity-task-title'), activityStartButton = document.getElementById('activity-start'), activityCompleteButton = document.getElementById('activity-complete'), activityMergeButton = document.getElementById('activity-merge'), activityLog = document.getElementById('activity-log'), searchInput = document.getElementById('task-search'), deviceList = document.getElementById('device-list'), pairingStatus = document.getElementById('pairing-status');
 let tasks = loadTasks();
+let pairedDevices = loadPairedDevices();
+let pairingRequest = loadPairingRequest();
 let assistantEnabled = false;
 let assistantDrafts = [];
 let searchQuery = '';
@@ -28,6 +32,40 @@ function loadTasks() {
     console.warn('Failed to read tasks from localStorage', error);
     return [];
   }
+}
+function loadPairedDevices() {
+  try {
+    const raw = localStorage.getItem(pairedDevicesKey);
+    if (!raw) { return []; }
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) { return []; }
+    return parsed.filter((device) => device && typeof device === 'object');
+  } catch (error) {
+    console.warn('Failed to read paired devices', error);
+    return [];
+  }
+}
+function savePairedDevices(devices) {
+  localStorage.setItem(pairedDevicesKey, JSON.stringify(devices));
+}
+function loadPairingRequest() {
+  try {
+    const raw = localStorage.getItem(pairingRequestKey);
+    if (!raw) { return null; }
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') { return null; }
+    return parsed;
+  } catch (error) {
+    console.warn('Failed to read pairing request', error);
+    return null;
+  }
+}
+function savePairingRequest(request) {
+  if (!request) {
+    localStorage.removeItem(pairingRequestKey);
+    return;
+  }
+  localStorage.setItem(pairingRequestKey, JSON.stringify(request));
 }
 function normalizeAttempt(attempt) {
   if (!attempt || typeof attempt !== 'object') { return null; }
@@ -76,6 +114,20 @@ function setSearchQuery(value) {
 function createTaskId() { return `task_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
 function createAttemptId() { return `attempt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
 function createEvidenceId() { return `evidence_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
+function createPairingToken() { return `pair_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
+function getDeviceName() {
+  const hostname = window.location.hostname || 'Local computer';
+  return hostname === 'localhost' || hostname === '127.0.0.1' ? 'Local computer' : hostname;
+}
+function createPairingRequest() {
+  const timestamp = new Date().toISOString();
+  return {
+    id: createPairingToken(),
+    deviceName: getDeviceName(),
+    status: 'pending',
+    createdAt: timestamp,
+  };
+}
 function createAttempt(config) { const timestamp = new Date().toISOString(); return { id: createAttemptId(), status: defaultAttemptStatus, startedAt: timestamp, updatedAt: timestamp, agent: { ...config } }; }
 function formatTimestamp(isoString) {
   try {
@@ -108,6 +160,8 @@ function renderTasks() {
     column.count.textContent = grouped[column.key].length.toString();
   });
   renderActivityPanel();
+  renderDeviceList();
+  updatePairingStatus();
 }
 function getActiveAttempt(task) {
   if (!task || !Array.isArray(task.attempts) || task.attempts.length === 0) {
@@ -120,67 +174,20 @@ function getActiveAttempt(task) {
 }
 function renderTaskList(listElement, list, options) {
   listElement.innerHTML = '';
-  if (list.length === 0) {
-    const empty = document.createElement('div');
-    empty.className = 'empty';
-    empty.textContent = options.emptyMessage;
-    listElement.appendChild(empty);
-    return;
-  }
+  if (list.length === 0) { const empty = document.createElement('div'); empty.className = 'empty'; empty.textContent = options.emptyMessage; listElement.appendChild(empty); return; }
   list.forEach((task) => {
     const card = document.createElement('article');
-    card.className = `task-card${task.status === 'done' ? ' done' : ''}`;
-    card.setAttribute('role', 'listitem');
-    card.setAttribute('draggable', 'true');
-    card.dataset.taskId = task.id;
-    card.addEventListener('dragstart', handleTaskDragStart);
-    card.addEventListener('dragend', handleTaskDragEnd);
-    const title = document.createElement('h4');
-    title.textContent = task.title;
-    const description = document.createElement('p');
-    description.textContent = task.description || 'No description provided.';
-    const meta = document.createElement('div');
-    meta.className = 'task-meta';
-    meta.textContent =
-      task.status === 'done'
-        ? `Completed ${formatTimestamp(task.updatedAt)}`
-        : `Created ${formatTimestamp(task.createdAt)}`;
-    card.appendChild(title);
-    card.appendChild(description);
-    card.appendChild(meta);
+    card.className = `task-card${task.status === 'done' ? ' done' : ''}`; card.setAttribute('role', 'listitem'); card.setAttribute('draggable', 'true'); card.dataset.taskId = task.id;
+    card.addEventListener('dragstart', handleTaskDragStart); card.addEventListener('dragend', handleTaskDragEnd);
+    const title = document.createElement('h4'); title.textContent = task.title;
+    const description = document.createElement('p'); description.textContent = task.description || 'No description provided.';
+    const meta = document.createElement('div'); meta.className = 'task-meta'; meta.textContent = task.status === 'done' ? `Completed ${formatTimestamp(task.updatedAt)}` : `Created ${formatTimestamp(task.createdAt)}`;
+    card.append(title, description, meta);
     const activeAttempt = getActiveAttempt(task);
-    if (activeAttempt) {
-      const attemptMeta = document.createElement('div');
-      attemptMeta.className = 'task-attempt';
-      const statusLabel = activeAttempt.status
-        ? activeAttempt.status.replace('_', ' ')
-        : defaultAttemptStatus;
-      const agentLabel = activeAttempt.agent
-        ? [activeAttempt.agent.provider, activeAttempt.agent.model].filter(Boolean).join(' ')
-        : '';
-      attemptMeta.textContent = agentLabel
-        ? `Attempt ${statusLabel} · ${agentLabel}`
-        : `Attempt ${statusLabel}`;
-      card.appendChild(attemptMeta);
-    }
+    if (activeAttempt) { const attemptMeta = document.createElement('div'); attemptMeta.className = 'task-attempt'; const statusLabel = activeAttempt.status ? activeAttempt.status.replace('_', ' ') : defaultAttemptStatus; const agentLabel = activeAttempt.agent ? [activeAttempt.agent.provider, activeAttempt.agent.model].filter(Boolean).join(' ') : ''; attemptMeta.textContent = agentLabel ? `Attempt ${statusLabel} · ${agentLabel}` : `Attempt ${statusLabel}`; card.appendChild(attemptMeta); }
     if (Array.isArray(task.evidence) && task.evidence.length > 0) { const latest = task.evidence[task.evidence.length - 1]; const evidence = document.createElement('div'); evidence.className = 'task-evidence'; const label = latest ? formatEvidenceLabel(latest.type) : 'Evidence logged'; evidence.textContent = `${label} · ${task.evidence.length} update${task.evidence.length === 1 ? '' : 's'}`; card.appendChild(evidence); }
-    if (task.status === 'done') {
-      const status = document.createElement('div');
-      status.className = 'task-status';
-      status.textContent = 'Done';
-      card.appendChild(status);
-    }
-    if (options.showCompleteAction && task.status !== 'done') {
-      const actions = document.createElement('div');
-      actions.className = 'task-actions';
-      const completeButton = document.createElement('button');
-      completeButton.type = 'button';
-      completeButton.className = 'task-action';
-      completeButton.textContent = 'Complete';
-      completeButton.addEventListener('click', () => markTaskDone(task.id));
-      actions.appendChild(completeButton);
-      card.appendChild(actions);
-    }
+    if (task.status === 'done') { const status = document.createElement('div'); status.className = 'task-status'; status.textContent = 'Done'; card.appendChild(status); }
+    if (options.showCompleteAction && task.status !== 'done') { const actions = document.createElement('div'); actions.className = 'task-actions'; const completeButton = document.createElement('button'); completeButton.type = 'button'; completeButton.className = 'task-action'; completeButton.textContent = 'Complete'; completeButton.addEventListener('click', () => markTaskDone(task.id)); actions.appendChild(completeButton); card.appendChild(actions); }
     listElement.appendChild(card);
   });
 }
@@ -197,196 +204,63 @@ function renderActivityLog(task) {
   activityLog.innerHTML = '';
   if (!task) { const empty = document.createElement('div'); empty.className = 'empty'; empty.textContent = 'No activity task available.'; activityLog.appendChild(empty); return; }
   if (!Array.isArray(task.evidence) || task.evidence.length === 0) { const empty = document.createElement('div'); empty.className = 'empty'; empty.textContent = 'No agent activity recorded yet.'; activityLog.appendChild(empty); return; }
-  [...task.evidence].slice(-5).reverse().forEach((entry) => {
-    const item = document.createElement('div');
-    item.className = 'activity-item';
-    const label = document.createElement('span');
-    label.textContent = formatEvidenceLabel(entry.type);
-    const time = document.createElement('span');
-    time.className = 'activity-time';
-    time.textContent = formatTimestamp(entry.timestamp);
-    item.append(label, time);
-    activityLog.appendChild(item);
-  });
+  [...task.evidence].slice(-5).reverse().forEach((entry) => { const item = document.createElement('div'); item.className = 'activity-item'; const label = document.createElement('span'); label.textContent = formatEvidenceLabel(entry.type); const time = document.createElement('span'); time.className = 'activity-time'; time.textContent = formatTimestamp(entry.timestamp); item.append(label, time); activityLog.appendChild(item); });
 }
 function updateActivityControls(task) {
   if (!activityStartButton || !activityCompleteButton || !activityMergeButton) { return; }
   if (!task) { activityStartButton.disabled = true; activityCompleteButton.disabled = true; activityMergeButton.disabled = true; return; }
-  const status = normalizeStatus(task.status);
-  activityStartButton.disabled = status !== 'todo';
-  activityCompleteButton.disabled = status !== 'in_progress';
-  activityMergeButton.disabled = status !== 'in_review';
+  const status = normalizeStatus(task.status); activityStartButton.disabled = status !== 'todo'; activityCompleteButton.disabled = status !== 'in_progress'; activityMergeButton.disabled = status !== 'in_review';
 }
 function renderActivityPanel() {
   if (!activityPanel) { return; }
   const task = findTaskById(activityTaskId);
   if (activityTaskTitle) { activityTaskTitle.textContent = task ? task.title : 'No active task'; }
-  renderActivityLog(task);
-  updateActivityControls(task);
+  renderActivityLog(task); updateActivityControls(task);
 }
-function openTaskModal() {
-  taskModal.setAttribute('aria-hidden', 'false');
-  taskModal.setAttribute('data-state', 'open');
-  titleInput.focus();
+function renderDeviceList() {
+  if (!deviceList) { return; }
+  deviceList.innerHTML = '';
+  if (!Array.isArray(pairedDevices) || pairedDevices.length === 0) { const empty = document.createElement('div'); empty.className = 'empty'; empty.textContent = 'No paired devices yet.'; deviceList.appendChild(empty); return; }
+  pairedDevices.forEach((device) => { const card = document.createElement('article'); card.className = 'device-card'; card.setAttribute('role', 'listitem'); const title = document.createElement('h4'); title.textContent = device.name || 'Unnamed device'; const meta = document.createElement('div'); meta.className = 'device-meta'; meta.textContent = device.pairedAt ? `Paired ${formatTimestamp(device.pairedAt)}` : 'Paired recently'; const status = document.createElement('div'); status.className = 'device-status'; status.textContent = device.status ? device.status.toUpperCase() : 'PAIRED'; card.append(title, meta, status); deviceList.appendChild(card); });
 }
-function closeTaskModal() {
-  taskModal.setAttribute('aria-hidden', 'true');
-  taskModal.setAttribute('data-state', 'closed');
-  form.reset();
-  clearValidation();
-  resetAssistantUI();
+function updatePairingStatus() {
+  if (!pairingStatus) { return; }
+  if (Array.isArray(pairedDevices) && pairedDevices.length > 0) { pairingStatus.textContent = `${pairedDevices.length} device${pairedDevices.length === 1 ? '' : 's'} paired.`; return; }
+  if (pairingRequest && pairingRequest.status === 'pending') { pairingStatus.textContent = 'Pairing request awaiting approval.'; return; }
+  pairingStatus.textContent = 'No devices paired yet.';
 }
-function clearValidation() {
-  titleError.textContent = '';
-  titleInput.removeAttribute('aria-invalid');
-}
-function validateForm() {
-  const titleValue = titleInput.value.trim();
-  if (!titleValue) {
-    titleError.textContent = 'Title is required.';
-    titleInput.setAttribute('aria-invalid', 'true');
-    titleInput.focus();
-    return false;
-  }
-  clearValidation();
-  return true;
-}
-function clearAssistantSuggestions() {
-  if (!assistantSuggestions) {
-    return;
-  }
-  assistantSuggestions.innerHTML = '';
-  assistantSuggestions.setAttribute('data-state', 'empty');
-}
+function openTaskModal() { taskModal.setAttribute('aria-hidden', 'false'); taskModal.setAttribute('data-state', 'open'); titleInput.focus(); }
+function closeTaskModal() { taskModal.setAttribute('aria-hidden', 'true'); taskModal.setAttribute('data-state', 'closed'); form.reset(); clearValidation(); resetAssistantUI(); }
+function clearValidation() { titleError.textContent = ''; titleInput.removeAttribute('aria-invalid'); }
+function validateForm() { const titleValue = titleInput.value.trim(); if (!titleValue) { titleError.textContent = 'Title is required.'; titleInput.setAttribute('aria-invalid', 'true'); titleInput.focus(); return false; } clearValidation(); return true; }
+function clearAssistantSuggestions() { if (!assistantSuggestions) { return; } assistantSuggestions.innerHTML = ''; assistantSuggestions.setAttribute('data-state', 'empty'); }
 function renderAssistantSuggestions(suggestions) {
-  if (!assistantSuggestions) {
-    return;
-  }
+  if (!assistantSuggestions) { return; }
   assistantSuggestions.innerHTML = '';
-  if (!suggestions || suggestions.length === 0) {
-    assistantSuggestions.setAttribute('data-state', 'empty');
-    return;
-  }
+  if (!suggestions || suggestions.length === 0) { assistantSuggestions.setAttribute('data-state', 'empty'); return; }
   assistantSuggestions.setAttribute('data-state', 'ready');
-  suggestions.forEach((suggestion) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'assistant-suggestion';
-    button.dataset.suggestion = suggestion;
-    const label = document.createElement('span');
-    label.className = 'assistant-suggestion-label';
-    label.textContent = 'Use suggestion';
-    const text = document.createElement('span');
-    text.className = 'assistant-suggestion-text';
-    text.textContent = suggestion;
-    button.append(label, text);
-    assistantSuggestions.appendChild(button);
-  });
+  suggestions.forEach((suggestion) => { const button = document.createElement('button'); button.type = 'button'; button.className = 'assistant-suggestion'; button.dataset.suggestion = suggestion; const label = document.createElement('span'); label.className = 'assistant-suggestion-label'; label.textContent = 'Use suggestion'; const text = document.createElement('span'); text.className = 'assistant-suggestion-text'; text.textContent = suggestion; button.append(label, text); assistantSuggestions.appendChild(button); });
 }
-function setAssistantEnabled(enabled) {
-  assistantEnabled = enabled;
-  if (assistantSuggestButton) {
-    assistantSuggestButton.disabled = !enabled;
-  }
-  if (assistantPanel) {
-    assistantPanel.setAttribute('data-enabled', enabled ? 'true' : 'false');
-  }
-  if (!enabled) {
-    clearAssistantSuggestions();
-    assistantDrafts = [];
-  }
-}
-function requestAssistantSuggestions() {
-  if (!assistantEnabled) {
-    return;
-  }
-  assistantDrafts = [...assistantSuggestionTemplates];
-  renderAssistantSuggestions(assistantDrafts);
-}
-function insertSuggestion(suggestion) {
-  if (!suggestion) {
-    return;
-  }
-  const current = descriptionInput.value.trim();
-  const spacer = current ? ' ' : '';
-  descriptionInput.value = `${current}${spacer}${suggestion}`;
-  descriptionInput.focus();
-}
-function resetAssistantUI() {
-  if (assistantToggle) {
-    assistantToggle.checked = false;
-  }
-  setAssistantEnabled(false);
-}
+function setAssistantEnabled(enabled) { assistantEnabled = enabled; if (assistantSuggestButton) { assistantSuggestButton.disabled = !enabled; } if (assistantPanel) { assistantPanel.setAttribute('data-enabled', enabled ? 'true' : 'false'); } if (!enabled) { clearAssistantSuggestions(); assistantDrafts = []; } }
+function requestAssistantSuggestions() { if (!assistantEnabled) { return; } assistantDrafts = [...assistantSuggestionTemplates]; renderAssistantSuggestions(assistantDrafts); }
+function insertSuggestion(suggestion) { if (!suggestion) { return; } const current = descriptionInput.value.trim(); const spacer = current ? ' ' : ''; descriptionInput.value = `${current}${spacer}${suggestion}`; descriptionInput.focus(); }
+function resetAssistantUI() { if (assistantToggle) { assistantToggle.checked = false; } setAssistantEnabled(false); }
 function buildTaskPayload({ title, description, startAttempt }) {
   const timestamp = new Date().toISOString();
-  const task = {
-    id: createTaskId(),
-    title,
-    description,
-    status: startAttempt ? 'in_progress' : 'todo',
-    createdAt: timestamp,
-    updatedAt: timestamp,
-    attempts: [],
-    activeAttemptId: null,
-    evidence: [],
-  };
-  if (startAttempt) {
-    const attempt = createAttempt(defaultAgentConfig);
-    task.attempts = [attempt];
-    task.activeAttemptId = attempt.id;
-  }
+  const task = { id: createTaskId(), title, description, status: startAttempt ? 'in_progress' : 'todo', createdAt: timestamp, updatedAt: timestamp, attempts: [], activeAttemptId: null, evidence: [] };
+  if (startAttempt) { const attempt = createAttempt(defaultAgentConfig); task.attempts = [attempt]; task.activeAttemptId = attempt.id; }
   return task;
 }
 openModalButton.addEventListener('click', openTaskModal);
 closeModalButton.addEventListener('click', closeTaskModal);
 cancelModalButton.addEventListener('click', closeTaskModal);
-taskModal.addEventListener('click', (event) => {
-  if (event.target === taskModal) {
-    closeTaskModal();
-  }
-});
-window.addEventListener('keydown', (event) => {
-  if (event.key !== 'Escape') {
-    return;
-  }
-  if (taskModal.getAttribute('aria-hidden') === 'false') {
-    closeTaskModal();
-  }
-  if (connectModal.getAttribute('aria-hidden') === 'false') {
-    closeConnectModal();
-  }
-});
-titleInput.addEventListener('input', () => {
-  if (titleInput.value.trim()) {
-    clearValidation();
-  }
-});
-if (searchInput) {
-  searchQuery = normalizeSearchQuery(searchInput.value);
-  searchInput.addEventListener('input', (event) => {
-    setSearchQuery(event.target.value);
-  });
-}
-if (assistantToggle) {
-  assistantToggle.addEventListener('change', (event) => {
-    setAssistantEnabled(event.target.checked);
-  });
-}
-if (assistantSuggestButton) {
-  assistantSuggestButton.addEventListener('click', () => {
-    requestAssistantSuggestions();
-  });
-}
-if (assistantSuggestions) {
-  assistantSuggestions.addEventListener('click', (event) => {
-    const button = event.target.closest('button[data-suggestion]');
-    if (!button) {
-      return;
-    }
-    insertSuggestion(button.dataset.suggestion);
-  });
-}
+taskModal.addEventListener('click', (event) => { if (event.target === taskModal) { closeTaskModal(); } });
+window.addEventListener('keydown', (event) => { if (event.key !== 'Escape') { return; } if (taskModal.getAttribute('aria-hidden') === 'false') { closeTaskModal(); } if (connectModal.getAttribute('aria-hidden') === 'false') { closeConnectModal(); } });
+titleInput.addEventListener('input', () => { if (titleInput.value.trim()) { clearValidation(); } });
+if (searchInput) { searchQuery = normalizeSearchQuery(searchInput.value); searchInput.addEventListener('input', (event) => { setSearchQuery(event.target.value); }); }
+if (assistantToggle) { assistantToggle.addEventListener('change', (event) => { setAssistantEnabled(event.target.checked); }); }
+if (assistantSuggestButton) { assistantSuggestButton.addEventListener('click', () => { requestAssistantSuggestions(); }); }
+if (assistantSuggestions) { assistantSuggestions.addEventListener('click', (event) => { const button = event.target.closest('button[data-suggestion]'); if (!button) { return; } insertSuggestion(button.dataset.suggestion); }); }
 if (activityStartButton) { activityStartButton.addEventListener('click', () => startTaskAttempt(activityTaskId)); }
 if (activityCompleteButton) { activityCompleteButton.addEventListener('click', () => completeTaskAttempt(activityTaskId)); }
 if (activityMergeButton) { activityMergeButton.addEventListener('click', () => mergeTask(activityTaskId)); }
@@ -414,8 +288,11 @@ function startTaskAttempt(taskId) { const task = findTaskById(taskId); if (!task
 function completeTaskAttempt(taskId) { const task = findTaskById(taskId); if (!task) { return; } const timestamp = new Date().toISOString(); const activeAttempt = getActiveAttempt(task); if (activeAttempt) { activeAttempt.status = 'completed'; activeAttempt.updatedAt = timestamp; } task.status = 'in_review'; recordEvidence(task, activityEvidenceTypes.attempt_completed, 'Attempt completed'); saveTasks(); renderTasks(); }
 function mergeTask(taskId) { const task = findTaskById(taskId); if (!task) { return; } task.status = 'done'; recordEvidence(task, activityEvidenceTypes.task_merged, 'Merged to main'); saveTasks(); renderTasks(); }
 function markTaskDone(taskId) { moveTaskToStatus(taskId, 'done'); }
-function getMobileUrl() {
-  return new URL('mobile/', window.location.href).toString();
+function getPairingLink(request) {
+  const url = new URL('mobile/', window.location.href);
+  if (request?.id) { url.searchParams.set('pairing', request.id); }
+  if (request?.deviceName) { url.searchParams.set('device', request.deviceName); }
+  return url.toString();
 }
 function renderQrCode(url) {
   if (!qrCodeContainer) {
@@ -440,16 +317,20 @@ function renderQrCode(url) {
 }
 function openConnectModal() {
   connectModal.setAttribute('aria-hidden', 'false');
-  const mobileUrl = getMobileUrl();
-  mobileUrlInput.value = mobileUrl;
+  pairingRequest = createPairingRequest();
+  savePairingRequest(pairingRequest);
+  const pairingLink = getPairingLink(pairingRequest);
+  if (pairingLinkInput) { pairingLinkInput.value = pairingLink; }
   copyLinkButton.textContent = 'Copy link';
-  renderQrCode(mobileUrl);
+  renderQrCode(pairingLink);
+  updatePairingStatus();
 }
 function closeConnectModal() {
   connectModal.setAttribute('aria-hidden', 'true');
 }
 async function copyMobileLink() {
-  const url = mobileUrlInput.value;
+  if (!pairingLinkInput) { return; }
+  const url = pairingLinkInput.value;
   if (!url) {
     return;
   }
@@ -457,7 +338,7 @@ async function copyMobileLink() {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(url);
     } else {
-      mobileUrlInput.select();
+      pairingLinkInput.select();
       document.execCommand('copy');
     }
     copyLinkButton.textContent = 'Copied!';
@@ -466,6 +347,7 @@ async function copyMobileLink() {
   }
 }
 openConnectButton.addEventListener('click', openConnectModal);
+if (openPairingButton) { openPairingButton.addEventListener('click', openConnectModal); }
 closeConnectButton.addEventListener('click', closeConnectModal);
 connectModal.addEventListener('click', (event) => {
   if (event.target === connectModal) {
@@ -477,6 +359,17 @@ window.addEventListener('storage', (event) => {
   if (event.key === storageKey) {
     tasks = loadTasks();
     renderTasks();
+    return;
+  }
+  if (event.key === pairedDevicesKey) {
+    pairedDevices = loadPairedDevices();
+    renderDeviceList();
+    updatePairingStatus();
+    return;
+  }
+  if (event.key === pairingRequestKey) {
+    pairingRequest = loadPairingRequest();
+    updatePairingStatus();
   }
 });
 seedActivityTask();

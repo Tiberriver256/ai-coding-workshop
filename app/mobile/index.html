@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Slice 0001 · Mobile Review</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="mobile">
+      <header class="mobile-header">
+        <div>
+          <p class="eyebrow">Slice 0001</p>
+          <h1>Mobile Review</h1>
+          <p class="subtitle">Live view of tasks stored on this device.</p>
+          <p class="account" id="mobile-account">Signed in</p>
+          <p class="timestamp" id="last-updated">Updated just now</p>
+        </div>
+        <span class="status-pill" id="sync-pill">Local only</span>
+      </header>
+
+      <main class="mobile-board">
+        <section class="panel pairing-panel" aria-labelledby="pairing-title">
+          <div class="panel-header">
+            <h2 id="pairing-title">Pairing request</h2>
+            <span class="count" id="pairing-status">None</span>
+          </div>
+          <div class="pairing-details" id="pairing-details">No pending pairing requests.</div>
+          <button class="primary" id="approve-pairing" type="button">Approve pairing</button>
+        </section>
+
+        <section class="panel" aria-labelledby="devices-title">
+          <div class="panel-header">
+            <h2 id="devices-title">Devices</h2>
+            <span class="count" id="device-count">0</span>
+          </div>
+          <div class="device-list" id="device-list" role="list"></div>
+        </section>
+
+        <section class="panel" aria-labelledby="mobile-todo">
+          <div class="panel-header">
+            <h2 id="mobile-todo">To Do</h2>
+            <span class="count" id="todo-count">0</span>
+          </div>
+          <div class="task-list" id="todo-list" role="list"></div>
+        </section>
+
+        <section class="panel" aria-labelledby="mobile-done">
+          <div class="panel-header">
+            <h2 id="mobile-done">Done</h2>
+            <span class="count" id="done-count">0</span>
+          </div>
+          <div class="task-list" id="done-list" role="list"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

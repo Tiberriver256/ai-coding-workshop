@@ -1,0 +1,68 @@
+#!/usr/bin/env node
+const os = require('os');
+
+function printHelp() {
+  console.log(`Usage: unified <command>
+
+Commands:
+  auth login    Pair this computer with the mobile app
+
+Options:
+  --help        Show help
+`);
+}
+
+function createPairingToken() {
+  const now = Date.now().toString(36);
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `${now}-${rand}`;
+}
+
+function defaultDeviceName() {
+  const hostname = os.hostname();
+  return hostname ? `${hostname} computer` : 'This computer';
+}
+
+function buildPairingLink(token, deviceName) {
+  const baseUrl = process.env.UNIFIED_MOBILE_URL || 'http://127.0.0.1:4173/mobile/';
+  const url = new URL(baseUrl);
+  url.searchParams.set('pairing', token);
+  url.searchParams.set('device', deviceName);
+  return url.toString();
+}
+
+function renderQrPlaceholder(token) {
+  const frame = ['+-----------+', '| ######### |', '| # QR QR # |', '| # QR QR # |', '| ######### |', '+-----------+'];
+  return `${frame.join('\n')}\nToken: ${token}`;
+}
+
+function handleAuthLogin() {
+  const token = createPairingToken();
+  const deviceName = defaultDeviceName();
+  const pairingLink = buildPairingLink(token, deviceName);
+
+  console.log('Pair using mobile QR');
+  console.log('Option: Mobile QR pairing');
+  console.log('QR code:');
+  console.log(renderQrPlaceholder(token));
+  console.log(`Fallback link: ${pairingLink}`);
+}
+
+function main() {
+  const args = process.argv.slice(2);
+  if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
+    printHelp();
+    return;
+  }
+
+  if (args[0] === 'auth' && args[1] === 'login') {
+    handleAuthLogin();
+    return;
+  }
+
+  console.error('Unknown command.');
+  printHelp();
+  process.exitCode = 1;
+}
+
+main();
