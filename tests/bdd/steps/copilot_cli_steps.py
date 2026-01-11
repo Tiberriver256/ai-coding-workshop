@@ -151,6 +151,13 @@ def js_sets_copilot_install_instructions(js_source):
     return "setCopilotInstructions" in body and "installed" in body and "Install Copilot CLI" in body
 
 
+def js_sets_copilot_auth_instructions(js_source):
+    body = extract_function_body(js_source, "updateCopilotStatusUI")
+    if not body:
+        return False
+    return "setCopilotInstructions" in body and "authenticated" in body and "Authenticate Copilot CLI" in body
+
+
 def js_blocks_copilot_enable_when_not_ready(js_source):
     body = extract_function_body(js_source, "setCopilotEnabled")
     if not body:
@@ -268,12 +275,28 @@ def step_copilot_not_installed(context):
     context.copilot_state["authenticated"] = False
 
 
+@given("Copilot CLI is installed but not authenticated")
+def step_copilot_not_authenticated(context):
+    js_source = context.copilot_state["js"]
+    assert js_sets_copilot_auth_instructions(js_source), "Copilot auth instructions are not wired"
+    context.copilot_state["installed"] = True
+    context.copilot_state["authenticated"] = False
+
+
 @then("I see instructions to install Copilot CLI")
 def step_copilot_install_instructions(context):
     html = context.copilot_state["html"]
     assert has_id(html, "copilot-instructions"), "Copilot install instructions element missing"
     js_source = context.copilot_state["js"]
     assert js_sets_copilot_install_instructions(js_source), "Copilot install instructions are not surfaced"
+
+
+@then("I see instructions to authenticate Copilot CLI")
+def step_copilot_auth_instructions(context):
+    html = context.copilot_state["html"]
+    assert has_id(html, "copilot-instructions"), "Copilot auth instructions element missing"
+    js_source = context.copilot_state["js"]
+    assert js_sets_copilot_auth_instructions(js_source), "Copilot auth instructions are not surfaced"
 
 
 @then("Copilot CLI is not enabled")

@@ -23,3 +23,9 @@ Feature: Copilot CLI support for command and prompt suggestions
     When I enable Copilot CLI in Settings
     Then I see instructions to install Copilot CLI
     And Copilot CLI is not enabled
+
+  Scenario: Copilot CLI is installed but not authenticated
+    Given Copilot CLI is installed but not authenticated
+    When I enable Copilot CLI in Settings
+    Then I see instructions to authenticate Copilot CLI
+    And Copilot CLI is not enabled

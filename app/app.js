@@ -77,11 +77,10 @@ function normalizeCopilotSettings(settings) {
   if (!settings || typeof settings !== 'object') {
     return { ...defaultCopilotSettings };
   }
-  return {
-    installed: typeof settings.installed === 'boolean' ? settings.installed : defaultCopilotSettings.installed,
-    authenticated: typeof settings.authenticated === 'boolean' ? settings.authenticated : defaultCopilotSettings.authenticated,
-    enabled: Boolean(settings.enabled),
-  };
+  const installed = typeof settings.installed === 'boolean' ? settings.installed : defaultCopilotSettings.installed;
+  const authenticated = typeof settings.authenticated === 'boolean' ? settings.authenticated : defaultCopilotSettings.authenticated;
+  const enabled = Boolean(settings.enabled) && installed && authenticated;
+  return { installed, authenticated, enabled };
 }
 function loadCopilotSettings() {
   try {
