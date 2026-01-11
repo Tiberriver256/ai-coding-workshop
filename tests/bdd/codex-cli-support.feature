@@ -11,3 +11,9 @@ Feature: Codex CLI support for remote sessions
     When I run "unified codex"
     Then a Codex session starts
     And the session is connected for remote access
+
+  Scenario: Prompt for authentication before starting Codex
+    Given I am not authenticated with the product
+    When I run "unified codex"
+    Then the product starts the authentication flow
+    And the Codex session starts after authentication completes

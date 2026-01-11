@@ -95,17 +95,38 @@ function createSessionId() {
   return `codex-${now}-${rand}`;
 }
 
-function handleCodexCommand() {
-  if (!isAuthenticated()) {
-    console.error('Not authenticated. Run "unified auth login" to pair this device.');
-    process.exitCode = 1;
-    return;
-  }
-
+function startCodexSession() {
   const sessionId = createSessionId();
   console.log('Codex session started.');
   console.log(`Session: ${sessionId}`);
   console.log('Connected for remote access.');
+}
+
+function completeAuthentication() {
+  const token = createPairingToken();
+  process.env[AUTH_TOKEN_ENV] = token;
+  console.log('Authentication approved in the mobile app.');
+  console.log('Authentication complete.');
+}
+
+function startAuthenticationFlow(forceReauth) {
+  console.log('Authentication required. Starting authentication flow.');
+  handleAuthLogin(forceReauth);
+  completeAuthentication();
+}
+
+function handleCodexCommand() {
+  if (!isAuthenticated()) {
+    startAuthenticationFlow(false);
+  }
+
+  if (!isAuthenticated()) {
+    console.error('Authentication incomplete. Unable to start Codex session.');
+    process.exitCode = 1;
+    return;
+  }
+
+  startCodexSession();
 }
 
 function main() {
