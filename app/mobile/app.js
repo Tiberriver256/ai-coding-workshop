@@ -10,6 +10,9 @@ const lastUpdated = document.getElementById('last-updated');
 const syncPill = document.getElementById('sync-pill');
 const pairingStatus = document.getElementById('pairing-status');
 const pairingDetails = document.getElementById('pairing-details');
+const manualLinkInput = document.getElementById('manual-link-input');
+const manualLinkButton = document.getElementById('submit-link');
+const manualLinkStatus = document.getElementById('manual-link-status');
 const approvePairingButton = document.getElementById('approve-pairing');
 const deviceList = document.getElementById('device-list');
 const deviceCount = document.getElementById('device-count');
@@ -109,6 +112,17 @@ function formatTimestamp(isoString) {
     return 'Just now';
   }
 }
+function setManualLinkStatus(message, tone) {
+  if (!manualLinkStatus) {
+    return;
+  }
+  manualLinkStatus.textContent = message || '';
+  if (!tone) {
+    manualLinkStatus.removeAttribute('data-tone');
+    return;
+  }
+  manualLinkStatus.dataset.tone = tone;
+}
 function getPairingParams() {
   const params = new URLSearchParams(window.location.search);
   const token = params.get('pairing');
@@ -120,13 +134,30 @@ function getPairingParams() {
     deviceName: params.get('device') || 'New computer',
   };
 }
-function ingestPairingLink() {
-  const params = getPairingParams();
+function parsePairingLink(link) {
+  if (!link) {
+    return null;
+  }
+  try {
+    const url = new URL(link, window.location.href);
+    const token = url.searchParams.get('pairing');
+    if (!token) {
+      return null;
+    }
+    return {
+      id: token,
+      deviceName: url.searchParams.get('device') || 'New computer',
+    };
+  } catch (error) {
+    return null;
+  }
+}
+function applyPairingParams(params) {
   if (!params) {
-    return;
+    return false;
   }
   if (pairingRequest && pairingRequest.id === params.id) {
-    return;
+    return false;
   }
   pairingRequest = {
     id: params.id,
@@ -135,6 +166,14 @@ function ingestPairingLink() {
     createdAt: new Date().toISOString(),
   };
   savePairingRequest(pairingRequest);
+  return true;
+}
+function ingestPairingLink() {
+  const params = getPairingParams();
+  if (!params) {
+    return;
+  }
+  applyPairingParams(params);
 }
 function renderPairingRequest() {
   if (!pairingDetails || !pairingStatus || !approvePairingButton) {
@@ -168,6 +207,29 @@ function approvePairingRequest() {
   renderPairingRequest();
   renderDeviceList();
   updateStatusPill();
+}
+function submitManualLink() {
+  if (!manualLinkInput) {
+    return;
+  }
+  const value = manualLinkInput.value.trim();
+  if (!value) {
+    setManualLinkStatus('Paste a connection link to continue.', 'error');
+    return;
+  }
+  const params = parsePairingLink(value);
+  if (!params) {
+    setManualLinkStatus('That link is invalid. Check and try again.', 'error');
+    return;
+  }
+  const applied = applyPairingParams(params);
+  if (!applied) {
+    setManualLinkStatus('That link is already pending.', 'success');
+    return;
+  }
+  setManualLinkStatus(`Link received for ${params.deviceName}.`, 'success');
+  renderPairingRequest();
+  updateTimestamp();
 }
 function renderDeviceList() {
   if (!deviceList || !deviceCount) {
@@ -282,6 +344,9 @@ window.addEventListener('storage', (event) => {
 
 if (approvePairingButton) {
   approvePairingButton.addEventListener('click', approvePairingRequest);
+}
+if (manualLinkButton) {
+  manualLinkButton.addEventListener('click', submitManualLink);
 }
 
 ingestPairingLink();

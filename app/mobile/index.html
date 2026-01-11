@@ -26,6 +26,20 @@
             <span class="count" id="pairing-status">None</span>
           </div>
           <div class="pairing-details" id="pairing-details">No pending pairing requests.</div>
+          <div class="manual-link">
+            <label class="field-label" for="manual-link-input">Connection link</label>
+            <div class="manual-link-row">
+              <input
+                id="manual-link-input"
+                type="text"
+                inputmode="url"
+                placeholder="Paste the connection link"
+                autocomplete="off"
+              />
+              <button class="ghost" id="submit-link" type="button">Use link</button>
+            </div>
+            <p class="helper" id="manual-link-status">Paste a link to start pairing.</p>
+          </div>
           <button class="primary" id="approve-pairing" type="button">Approve pairing</button>
         </section>
 

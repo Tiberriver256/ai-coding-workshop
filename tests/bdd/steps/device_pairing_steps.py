@@ -59,6 +59,14 @@ def js_reads_pairing_param(source):
     return "URLSearchParams" in source and "pairing" in source
 
 
+def js_parses_manual_link(source):
+    if not js_has_function(source, "parsePairingLink"):
+        return False
+    if "pairing" not in source:
+        return False
+    return "new URL" in source or "URL(" in source
+
+
 def js_approves_pairing(source):
     if not js_has_function(source, "approvePairingRequest"):
         return False
@@ -120,6 +128,24 @@ def step_cli_shows_qr_and_link(context):
 def step_scan_qr_code(context):
     mobile_js = context.device_state["mobile_js"]
     assert js_reads_pairing_param(mobile_js), "Mobile app does not read pairing link parameters"
+
+
+@when("I copy the connection link")
+def step_copy_connection_link(context):
+    cli_source = context.device_state["cli_source"]
+    assert cli_has_fallback_link(cli_source), "CLI does not include a connection link to copy"
+
+
+@when("I paste the link into the mobile app")
+def step_paste_link_into_mobile(context):
+    mobile_html = context.device_state["mobile_html"]
+    mobile_js = context.device_state["mobile_js"]
+    assert has_id(mobile_html, "manual-link-input"), "Manual link input missing"
+    assert has_id(mobile_html, "submit-link"), "Manual link submit button missing"
+    assert js_parses_manual_link(mobile_js), "Mobile app does not parse manual link input"
+    assert js_has_click_handler(mobile_js, "submit-link", "submitManualLink"), (
+        "Manual link submit button is not wired"
+    )
 
 
 @when("I approve the pairing request")

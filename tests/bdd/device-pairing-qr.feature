@@ -15,3 +15,11 @@ Feature: Pair a computer using QR onboarding
     And I approve the pairing request
     Then the computer is paired to my account
     And the computer appears in the app's device list
+
+  Scenario: Pair using a manual connection link
+    When I run "unified auth login" on my computer
+    And I copy the connection link
+    And I paste the link into the mobile app
+    And I approve the pairing request
+    Then the computer is paired to my account
+    And the computer appears in the app's device list
