@@ -1,7 +1,7 @@
-Feature: Create and orchestrate coding tasks
+Feature: Task orchestration
   As a user
-  I want to create tasks and start agent work from the board
-  So that I can orchestrate coding work efficiently
+  I want to create tasks without starting an agent
+  So that I can queue work for later
 
   Background:
     Given I am on a project board

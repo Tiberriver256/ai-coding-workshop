@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Slice 0001 · Task Board</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">Slice 0001</p>
+          <h1>Local Task Board</h1>
+          <p class="subtitle">Capture work fast. Everything stays on this device.</p>
+        </div>
+        <div class="header-actions">
+          <button class="ghost" id="open-connect" type="button">Connect Mobile</button>
+          <button class="primary" id="open-modal" type="button">Create Task</button>
+        </div>
+      </header>
+
+      <main class="board">
+        <section class="column" aria-labelledby="todo-title">
+          <div class="column-header">
+            <div>
+              <h2 id="todo-title">To Do</h2>
+              <p class="column-meta"><span id="todo-count">0</span> tasks</p>
+            </div>
+            <span class="pill">Local only</span>
+          </div>
+          <div class="task-list" id="todo-list" role="list"></div>
+        </section>
+        <section class="column" aria-labelledby="in-progress-title">
+          <div class="column-header">
+            <div>
+              <h2 id="in-progress-title">In Progress</h2>
+              <p class="column-meta"><span id="in-progress-count">0</span> tasks</p>
+            </div>
+            <span class="pill pill-progress">Active</span>
+          </div>
+          <div class="task-list" id="in-progress-list" role="list"></div>
+        </section>
+        <section class="column" aria-labelledby="in-review-title">
+          <div class="column-header">
+            <div>
+              <h2 id="in-review-title">In Review</h2>
+              <p class="column-meta"><span id="in-review-count">0</span> tasks</p>
+            </div>
+            <span class="pill pill-review">Review</span>
+          </div>
+          <div class="task-list" id="in-review-list" role="list"></div>
+        </section>
+        <section class="column" aria-labelledby="done-title">
+          <div class="column-header">
+            <div>
+              <h2 id="done-title">Done</h2>
+              <p class="column-meta"><span id="done-count">0</span> tasks</p>
+            </div>
+            <span class="pill pill-muted">Complete</span>
+          </div>
+          <div class="task-list" id="done-list" role="list"></div>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal" id="task-modal" aria-hidden="true">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Create Task</p>
+            <h3 id="modal-title">Add something to ship</h3>
+          </div>
+          <button class="icon-button" id="close-modal" type="button" aria-label="Close">
+            ✕
+          </button>
+        </div>
+
+        <form id="task-form" novalidate>
+          <label class="field">
+            <span>Title</span>
+            <input
+              id="task-title"
+              name="title"
+              type="text"
+              maxlength="120"
+              placeholder="Give it a clear title"
+              aria-describedby="title-error"
+              required
+            />
+            <span class="helper" id="title-error" role="alert"></span>
+          </label>
+
+          <label class="field">
+            <span>Description</span>
+            <textarea id="task-description" name="description" rows="4" maxlength="500" placeholder="Optional details"></textarea>
+          </label>
+
+          <div class="assistant-panel" id="assistant-panel">
+            <div class="assistant-header">
+              <div>
+                <p class="assistant-label">AI CLI assistant</p>
+                <p class="assistant-hint">Generate quick task instructions for the agent.</p>
+              </div>
+              <label class="assistant-toggle">
+                <input id="assistant-toggle" type="checkbox" />
+                <span>Enable</span>
+              </label>
+            </div>
+            <div class="assistant-actions">
+              <button class="ghost" id="assistant-suggest" type="button" disabled>
+                Suggest instructions
+              </button>
+            </div>
+            <div
+              class="assistant-suggestions"
+              id="assistant-suggestions"
+              role="list"
+              aria-live="polite"
+            ></div>
+          </div>
+
+          <div class="modal-actions">
+            <button class="ghost" id="cancel-modal" type="button">Cancel</button>
+            <button class="secondary" id="create-task" type="submit" data-action="create">
+              Create
+            </button>
+            <button class="primary" id="create-start" type="submit" data-action="create-start">
+              Create &amp; Start
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal" id="connect-modal" aria-hidden="true">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="connect-title">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Connect Mobile</p>
+            <h3 id="connect-title">Scan the QR code to open the mobile view</h3>
+          </div>
+          <button class="icon-button" id="close-connect" type="button" aria-label="Close">
+            ✕
+          </button>
+        </div>
+        <p class="modal-copy">
+          The mobile view mirrors tasks stored on the device that opens it. Scan while on the same
+          network to review progress.
+        </p>
+        <div class="qr-shell">
+          <div class="qr-code" id="qr-code" aria-label="QR code for mobile view"></div>
+          <div class="qr-details">
+            <span class="qr-label">Mobile URL</span>
+            <div class="qr-link">
+              <input id="mobile-url" type="text" readonly />
+              <button class="ghost" id="copy-link" type="button">Copy link</button>
+            </div>
+            <p class="qr-hint">Open in a mobile browser for a compact review panel.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="vendor/qrcode.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
