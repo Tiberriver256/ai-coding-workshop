@@ -7,6 +7,7 @@ const defaultAttemptStatus = 'running';
 const defaultAgentConfig = { provider: 'OpenAI', model: 'gpt-4.1-mini', temperature: 0.2 };
 const defaultCopilotSettings = { installed: true, authenticated: true, enabled: false };
 const assistantSuggestionTemplates = ['Draft a step-by-step plan with milestones and a clear definition of done.', 'List the files to inspect, the changes to make, and the tests to run.', 'Summarize the expected behavior and call out edge cases to verify.'];
+const copilotSuggestionTemplates = ['Use Copilot CLI to outline a step-by-step approach with tests.', 'Ask Copilot CLI for a concise task summary and acceptance checks.', 'Have Copilot CLI suggest edge cases and verification steps.'];
 const activityTaskId = 'task_agent_activity_demo';
 const activityEvidenceTypes = { attempt_started: 'attempt_started', attempt_completed: 'attempt_completed', task_merged: 'task_merged' };
 const activityEvidenceLabels = { attempt_started: 'Attempt started', attempt_completed: 'Attempt completed', task_merged: 'Merged into main' };
@@ -341,7 +342,7 @@ function setAssistantProvider(value) {
   if (assistantPanel) { assistantPanel.setAttribute('data-provider', assistantProvider); }
 }
 function setAssistantEnabled(enabled) { assistantEnabled = enabled; if (assistantSuggestButton) { assistantSuggestButton.disabled = !enabled; } if (assistantPanel) { assistantPanel.setAttribute('data-enabled', enabled ? 'true' : 'false'); } if (!enabled) { clearAssistantSuggestions(); assistantDrafts = []; } }
-function requestAssistantSuggestions() { if (!assistantEnabled) { return; } if (assistantProvider === 'copilot-cli' && !copilotSettings?.enabled) { return; } assistantDrafts = [...assistantSuggestionTemplates]; renderAssistantSuggestions(assistantDrafts); if (assistantSuggestions) { assistantSuggestions.setAttribute('data-provider', assistantProvider); } }
+function requestAssistantSuggestions() { if (!assistantEnabled) { return; } if (assistantProvider === 'copilot-cli' && !copilotSettings?.enabled) { return; } const suggestions = assistantProvider === 'copilot-cli' ? copilotSuggestionTemplates : assistantSuggestionTemplates; assistantDrafts = [...suggestions]; renderAssistantSuggestions(assistantDrafts); if (assistantSuggestions) { assistantSuggestions.setAttribute('data-provider', assistantProvider); } }
 function insertSuggestion(suggestion) { if (!suggestion) { return; } const current = descriptionInput.value.trim(); const spacer = current ? ' ' : ''; descriptionInput.value = `${current}${spacer}${suggestion}`; descriptionInput.focus(); }
 function resetAssistantUI() { if (assistantToggle) { assistantToggle.checked = false; } setAssistantEnabled(false); }
 function buildTaskPayload({ title, description, startAttempt }) {

@@ -126,6 +126,31 @@ def js_requests_use_provider(js_source):
     return "assistantProvider" in body
 
 
+def extract_copilot_suggestions(js_source):
+    match = re.search(
+        r"copilotSuggestionTemplates\s*=\s*\[(?P<body>[\s\S]*?)\];",
+        js_source,
+    )
+    if not match:
+        return []
+    body = match.group("body")
+    return [item for item in re.findall(r"['\"]([^'\"]+)['\"]", body) if item.strip()]
+
+
+def js_requests_copilot_suggestions(js_source):
+    body = extract_function_body(js_source, "requestAssistantSuggestions")
+    if not body:
+        return False
+    return "assistantProvider === 'copilot-cli'" in body and "copilotSuggestionTemplates" in body
+
+
+def js_inserts_suggestion(js_source):
+    body = extract_function_body(js_source, "insertSuggestion")
+    if not body:
+        return False
+    return "descriptionInput.value" in body
+
+
 @given("I am signed in to the product")
 def step_signed_in(context):
     html = load_html()
@@ -175,3 +200,45 @@ def step_select_copilot_for_autocomplete(context):
     )
     assert js_tracks_assistant_provider(js_source), "Assistant provider state is not tracked"
     assert js_requests_use_provider(js_source), "Autocomplete does not use selected assistant"
+
+
+@given("Copilot CLI is enabled")
+def step_copilot_enabled(context):
+    html = context.copilot_state["html"]
+    js_source = context.copilot_state["js"]
+    assert copilot_defaults_ready(js_source), "Copilot defaults do not indicate installed/authenticated"
+    assert has_id(html, "assistant-panel"), "Assistant panel missing from task modal"
+    assert has_function(js_source, "setCopilotEnabled"), "Copilot enable handler missing"
+    assert js_enables_copilot_option(js_source), "Copilot availability is not wired"
+    context.copilot_state["enabled"] = True
+
+
+@when("I request autocomplete while writing a task description")
+def step_request_copilot_autocomplete(context):
+    html = context.copilot_state["html"]
+    js_source = context.copilot_state["js"]
+    assert has_id(html, "task-description"), "Task description field missing"
+    assert has_id(html, "assistant-suggest"), "Assistant suggest button missing"
+    assert has_event_handler(js_source, "assistantSuggestButton", "click"), "Suggest button is not wired"
+    assert has_function(js_source, "requestAssistantSuggestions"), "Suggestion request handler missing"
+    context.copilot_state["requested"] = True
+
+
+@then("I see Copilot suggestions")
+def step_see_copilot_suggestions(context):
+    assert context.copilot_state.get("requested"), "Autocomplete was not requested"
+    html = context.copilot_state["html"]
+    js_source = context.copilot_state["js"]
+    assert has_id(html, "assistant-suggestions"), "Assistant suggestions container missing"
+    suggestions = extract_copilot_suggestions(js_source)
+    assert suggestions, "Copilot suggestions are not configured"
+    assert js_requests_copilot_suggestions(js_source), "Copilot suggestions are not requested"
+    context.copilot_state["suggestions"] = suggestions
+
+
+@then("I can insert a suggestion into the task description")
+def step_insert_copilot_suggestion(context):
+    js_source = context.copilot_state["js"]
+    assert has_event_handler(js_source, "assistantSuggestions", "click"), "Suggestion click handler missing"
+    assert has_function(js_source, "insertSuggestion"), "Suggestion insertion handler missing"
+    assert js_inserts_suggestion(js_source), "Suggestion insertion does not update description"
