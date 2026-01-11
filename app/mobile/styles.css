@@ -130,6 +130,9 @@ p {
   font-size: 0.9rem;
   color: var(--muted);
 }
+.pairing-details[data-tone='error'] {
+  color: #9a3b2f;
+}
 .manual-link {
   display: grid;
   gap: 8px;

@@ -1,6 +1,7 @@
 const storageKey = 'slice0001.tasks';
 const pairingRequestKey = 'slice0001.pairing_request';
 const pairedDevicesKey = 'slice0001.devices';
+const invalidPairingMessage = 'Invalid connection link. Check the QR code and try again.';
 
 const todoList = document.getElementById('todo-list');
 const doneList = document.getElementById('done-list');
@@ -21,6 +22,7 @@ const deviceCount = document.getElementById('device-count');
 let tasks = loadTasks();
 let pairedDevices = loadPairedDevices();
 let pairingRequest = loadPairingRequest();
+let pairingError = null;
 
 function loadTasks() {
   try {
@@ -124,11 +126,36 @@ function setManualLinkStatus(message, tone) {
   }
   manualLinkStatus.dataset.tone = tone;
 }
+function setPairingDetailsTone(tone) {
+  if (!pairingDetails) {
+    return;
+  }
+  if (!tone) {
+    pairingDetails.removeAttribute('data-tone');
+    return;
+  }
+  pairingDetails.dataset.tone = tone;
+}
+function setPairingError(message) {
+  pairingError = message || null;
+}
+function clearPairingError() {
+  pairingError = null;
+}
+function isValidPairingToken(token) {
+  if (!token || typeof token !== 'string') {
+    return false;
+  }
+  return /^pair_[a-z0-9]+_[a-z0-9]{6}$/.test(token);
+}
 function getPairingParams() {
   const params = new URLSearchParams(window.location.search);
-  const token = params.get('pairing');
-  if (!token) {
+  if (!params.has('pairing')) {
     return null;
+  }
+  const token = params.get('pairing');
+  if (!isValidPairingToken(token)) {
+    return { error: invalidPairingMessage };
   }
   return {
     id: token,
@@ -142,7 +169,7 @@ function parsePairingLink(link) {
   try {
     const url = new URL(link, window.location.href);
     const token = url.searchParams.get('pairing');
-    if (!token) {
+    if (!token || !isValidPairingToken(token)) {
       return null;
     }
     return {
@@ -157,6 +184,7 @@ function applyPairingParams(params) {
   if (!params) {
     return false;
   }
+  clearPairingError();
   if (pairingRequest && pairingRequest.id === params.id) {
     return false;
   }
@@ -174,12 +202,27 @@ function ingestPairingLink() {
   if (!params) {
     return;
   }
+  if (params.error) {
+    if (!pairingRequest) {
+      setPairingError(params.error);
+    }
+    return;
+  }
   applyPairingParams(params);
 }
 function renderPairingRequest() {
   if (!pairingDetails || !pairingStatus || !approvePairingButton || !rejectPairingButton) {
     return;
   }
+  if (pairingError && !pairingRequest) {
+    pairingStatus.textContent = 'Invalid';
+    pairingDetails.textContent = pairingError;
+    setPairingDetailsTone('error');
+    approvePairingButton.disabled = true;
+    rejectPairingButton.disabled = true;
+    return;
+  }
+  setPairingDetailsTone();
   if (!pairingRequest) {
     pairingStatus.textContent = 'None';
     pairingDetails.textContent = 'No pending pairing requests.';

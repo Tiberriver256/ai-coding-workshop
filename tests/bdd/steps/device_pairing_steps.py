@@ -75,6 +75,23 @@ def js_parses_manual_link(source):
     return "new URL" in source or "URL(" in source
 
 
+def js_validates_pairing_token(source):
+    if not js_has_function(source, "isValidPairingToken"):
+        return False
+    return "pair_" in source
+
+
+def js_handles_invalid_pairing_link(source):
+    if "Invalid connection link" not in source:
+        return False
+    return "pairingError" in source or js_has_function(source, "setPairingError")
+
+
+def js_disables_approve_on_invalid_link(source):
+    pattern = r"if\s*\(\s*pairingError[\s\S]*?\)\s*\{[\s\S]*?approvePairingButton\.disabled\s*=\s*true"
+    return bool(re.search(pattern, source))
+
+
 def js_approves_pairing(source):
     if not js_has_function(source, "approvePairingRequest"):
         return False
@@ -178,6 +195,13 @@ def step_open_valid_link(context):
     assert js_ingests_pairing_link(mobile_js), "Mobile app does not ingest pairing links"
 
 
+@when("I open an invalid connection link in the mobile app")
+def step_open_invalid_link(context):
+    mobile_js = context.device_state["mobile_js"]
+    assert js_validates_pairing_token(mobile_js), "Mobile app does not validate pairing tokens"
+    assert js_handles_invalid_pairing_link(mobile_js), "Mobile app does not handle invalid connection links"
+
+
 @when("I approve the pairing request")
 def step_approve_pairing(context):
     mobile_html = context.device_state["mobile_html"]
@@ -224,6 +248,18 @@ def step_device_in_list(context):
     assert has_id(mobile_html, "device-list"), "Mobile device list container missing"
     assert js_renders_device_list(desktop_js), "Desktop device list renderer missing"
     assert js_renders_device_list(mobile_js), "Mobile device list renderer missing"
+
+
+@then("I see an invalid link message")
+def step_invalid_link_message(context):
+    mobile_js = context.device_state["mobile_js"]
+    assert "Invalid connection link" in mobile_js, "Invalid link message missing"
+
+
+@then("I cannot approve the pairing")
+def step_cannot_approve_pairing(context):
+    mobile_js = context.device_state["mobile_js"]
+    assert js_disables_approve_on_invalid_link(mobile_js), "Approve button not disabled for invalid link"
 
 
 @then("the CLI shows that the request was rejected")

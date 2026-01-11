@@ -29,3 +29,8 @@ Feature: Pair a computer using QR onboarding
     And I reject the pairing request
     Then the computer is not paired to my account
     And the CLI shows that the request was rejected
+
+  Scenario: Handle an invalid connection link
+    When I open an invalid connection link in the mobile app
+    Then I see an invalid link message
+    And I cannot approve the pairing
