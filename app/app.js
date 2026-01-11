@@ -11,7 +11,7 @@ const copilotSuggestionTemplates = ['Use Copilot CLI to outline a step-by-step a
 const activityTaskId = 'task_agent_activity_demo';
 const activityEvidenceTypes = { attempt_started: 'attempt_started', attempt_completed: 'attempt_completed', task_merged: 'task_merged' };
 const activityEvidenceLabels = { attempt_started: 'Attempt started', attempt_completed: 'Attempt completed', task_merged: 'Merged into main' };
-const todoList = document.getElementById('todo-list'), todoCount = document.getElementById('todo-count'), inProgressList = document.getElementById('in-progress-list'), inProgressCount = document.getElementById('in-progress-count'), inReviewList = document.getElementById('in-review-list'), inReviewCount = document.getElementById('in-review-count'), doneList = document.getElementById('done-list'), doneCount = document.getElementById('done-count'), taskModal = document.getElementById('task-modal'), openModalButton = document.getElementById('open-modal'), closeModalButton = document.getElementById('close-modal'), cancelModalButton = document.getElementById('cancel-modal'), form = document.getElementById('task-form'), titleInput = document.getElementById('task-title'), descriptionInput = document.getElementById('task-description'), assistantPanel = document.getElementById('assistant-panel'), assistantToggle = document.getElementById('assistant-toggle'), assistantProviderSelect = document.getElementById('assistant-provider'), assistantSuggestButton = document.getElementById('assistant-suggest'), assistantSuggestions = document.getElementById('assistant-suggestions'), titleError = document.getElementById('title-error'), connectModal = document.getElementById('connect-modal'), openConnectButton = document.getElementById('open-connect'), openPairingButton = document.getElementById('open-pairing'), closeConnectButton = document.getElementById('close-connect'), qrCodeContainer = document.getElementById('qr-code'), pairingLinkInput = document.getElementById('pairing-link'), copyLinkButton = document.getElementById('copy-link'), activityPanel = document.getElementById('agent-activity'), activityTaskTitle = document.getElementById('activity-task-title'), activityStartButton = document.getElementById('activity-start'), activityCompleteButton = document.getElementById('activity-complete'), activityMergeButton = document.getElementById('activity-merge'), activityLog = document.getElementById('activity-log'), searchInput = document.getElementById('task-search'), deviceList = document.getElementById('device-list'), pairingStatus = document.getElementById('pairing-status'), copilotToggle = document.getElementById('copilot-toggle'), copilotStatus = document.getElementById('copilot-status'), copilotPill = document.getElementById('copilot-pill');
+const todoList = document.getElementById('todo-list'), todoCount = document.getElementById('todo-count'), inProgressList = document.getElementById('in-progress-list'), inProgressCount = document.getElementById('in-progress-count'), inReviewList = document.getElementById('in-review-list'), inReviewCount = document.getElementById('in-review-count'), doneList = document.getElementById('done-list'), doneCount = document.getElementById('done-count'), taskModal = document.getElementById('task-modal'), openModalButton = document.getElementById('open-modal'), closeModalButton = document.getElementById('close-modal'), cancelModalButton = document.getElementById('cancel-modal'), form = document.getElementById('task-form'), titleInput = document.getElementById('task-title'), descriptionInput = document.getElementById('task-description'), assistantPanel = document.getElementById('assistant-panel'), assistantToggle = document.getElementById('assistant-toggle'), assistantProviderSelect = document.getElementById('assistant-provider'), assistantSuggestButton = document.getElementById('assistant-suggest'), assistantSuggestions = document.getElementById('assistant-suggestions'), titleError = document.getElementById('title-error'), connectModal = document.getElementById('connect-modal'), openConnectButton = document.getElementById('open-connect'), openPairingButton = document.getElementById('open-pairing'), closeConnectButton = document.getElementById('close-connect'), qrCodeContainer = document.getElementById('qr-code'), pairingLinkInput = document.getElementById('pairing-link'), copyLinkButton = document.getElementById('copy-link'), activityPanel = document.getElementById('agent-activity'), activityTaskTitle = document.getElementById('activity-task-title'), activityStartButton = document.getElementById('activity-start'), activityCompleteButton = document.getElementById('activity-complete'), activityMergeButton = document.getElementById('activity-merge'), activityLog = document.getElementById('activity-log'), searchInput = document.getElementById('task-search'), deviceList = document.getElementById('device-list'), pairingStatus = document.getElementById('pairing-status'), copilotToggle = document.getElementById('copilot-toggle'), copilotStatus = document.getElementById('copilot-status'), copilotInstructions = document.getElementById('copilot-instructions'), copilotPill = document.getElementById('copilot-pill');
 let tasks = loadTasks();
 let pairedDevices = loadPairedDevices();
 let pairingRequest = loadPairingRequest();
@@ -294,25 +294,32 @@ function renderAssistantSuggestions(suggestions) {
   assistantSuggestions.setAttribute('data-state', 'ready');
   suggestions.forEach((suggestion) => { const button = document.createElement('button'); button.type = 'button'; button.className = 'assistant-suggestion'; button.dataset.suggestion = suggestion; const label = document.createElement('span'); label.className = 'assistant-suggestion-label'; label.textContent = 'Use suggestion'; const text = document.createElement('span'); text.className = 'assistant-suggestion-text'; text.textContent = suggestion; button.append(label, text); assistantSuggestions.appendChild(button); });
 }
+function setCopilotInstructions(message, state) { if (!copilotInstructions) { return; } const text = message ? message.trim() : ''; copilotInstructions.textContent = text; copilotInstructions.setAttribute('data-state', text ? (state || 'visible') : 'hidden'); }
 function updateCopilotStatusUI() {
   if (!copilotStatus || !copilotPill || !copilotToggle) { return; }
   const ready = isCopilotReady(copilotSettings);
-  copilotToggle.disabled = !ready;
-  copilotToggle.checked = Boolean(copilotSettings?.enabled) && ready;
-  if (!ready) {
-    copilotStatus.textContent = 'Copilot CLI not ready';
-    copilotPill.textContent = 'Unavailable';
+  copilotToggle.disabled = !ready; copilotToggle.checked = Boolean(copilotSettings?.enabled) && ready;
+  if (!copilotSettings?.installed) {
+    copilotStatus.textContent = 'Copilot CLI not installed';
+    copilotPill.textContent = 'Install required';
     copilotPill.classList.add('is-muted');
+    setCopilotInstructions('Install Copilot CLI with: gh extension install github/gh-copilot.', 'install');
     return;
   }
+  if (!copilotSettings?.authenticated) {
+    copilotStatus.textContent = 'Copilot CLI needs authentication';
+    copilotPill.textContent = 'Sign in required';
+    copilotPill.classList.add('is-muted');
+    setCopilotInstructions('Authenticate Copilot CLI with: gh copilot auth.', 'auth');
+    return;
+  }
+  setCopilotInstructions('');
   if (copilotSettings?.enabled) {
     copilotStatus.textContent = 'Connected';
-    copilotPill.textContent = 'Connected';
-    copilotPill.classList.remove('is-muted');
+    copilotPill.textContent = 'Connected'; copilotPill.classList.remove('is-muted');
     return;
   }
-  copilotStatus.textContent = 'Ready to connect';
-  copilotPill.textContent = 'Available';
+  copilotStatus.textContent = 'Ready to connect'; copilotPill.textContent = 'Available';
   copilotPill.classList.add('is-muted');
 }
 function updateAssistantProviderAvailability() {

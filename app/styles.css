@@ -70,10 +70,7 @@ p {
   font-size: 0.72rem;
   color: var(--muted);
 }
-.subtitle {
-  margin-top: 8px;
-  color: var(--muted);
-}
+.subtitle { margin-top: 8px; color: var(--muted); }
 .primary,
 .ghost,
 .icon-button {
@@ -158,6 +155,8 @@ p {
 .integration-status { font-weight: 500; }
 .integration-pill { padding: 4px 10px; border-radius: 999px; background: #e8f0e3; color: #3c5a3e; text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.68rem; }
 .integration-pill.is-muted { background: #f4e7d6; color: #7a6e60; }
+.integration-instructions { margin: 8px 0 0; font-size: 0.85rem; color: var(--muted); max-width: 360px; }
+.integration-instructions[data-state="hidden"] { display: none; }
 .integration-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--muted); }
 .integration-toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
 .search-panel { margin-top: 24px; background: var(--panel); border-radius: var(--radius); border: 1px solid var(--line); padding: 20px 28px; box-shadow: var(--shadow); }

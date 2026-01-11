@@ -32,6 +32,7 @@ WIP limit: 5 active delegates. Update cards with evidence links.
 - `docs/kanban/cards/feature-codex-cli-missing.md`
 - `docs/kanban/cards/feature-copilot-cli-enable.md`
 - `docs/kanban/cards/feature-copilot-cli-autocomplete.md`
+- `docs/kanban/cards/feature-copilot-cli-not-installed.md` — Done: added install instructions messaging, enablement guard, and BDD evidence.
 - `docs/kanban/cards/feature-task-orchestration-create-task.md`
 - `docs/kanban/cards/feature-task-orchestration-create-start.md`
 - `docs/kanban/cards/feature-task-orchestration-title-required.md`

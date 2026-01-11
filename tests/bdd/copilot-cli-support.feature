@@ -17,3 +17,9 @@ Feature: Copilot CLI support for command and prompt suggestions
     When I request autocomplete while writing a task description
     Then I see Copilot suggestions
     And I can insert a suggestion into the task description
+
+  Scenario: Copilot CLI is not installed
+    Given Copilot CLI is not installed
+    When I enable Copilot CLI in Settings
+    Then I see instructions to install Copilot CLI
+    And Copilot CLI is not enabled

@@ -144,6 +144,20 @@ def js_requests_copilot_suggestions(js_source):
     return "assistantProvider === 'copilot-cli'" in body and "copilotSuggestionTemplates" in body
 
 
+def js_sets_copilot_install_instructions(js_source):
+    body = extract_function_body(js_source, "updateCopilotStatusUI")
+    if not body:
+        return False
+    return "setCopilotInstructions" in body and "installed" in body and "Install Copilot CLI" in body
+
+
+def js_blocks_copilot_enable_when_not_ready(js_source):
+    body = extract_function_body(js_source, "setCopilotEnabled")
+    if not body:
+        return False
+    return "isCopilotReady" in body and "nextEnabled" in body and "ready &&" in body
+
+
 def js_inserts_suggestion(js_source):
     body = extract_function_body(js_source, "insertSuggestion")
     if not body:
@@ -177,7 +191,9 @@ def step_enable_copilot(context):
     assert has_event_handler(js_source, "copilotToggle", "change"), "Copilot toggle is not wired"
     assert has_function(js_source, "setCopilotEnabled"), "Copilot enable handler missing"
 
-    context.copilot_state["enabled"] = True
+    installed = context.copilot_state.get("installed", True)
+    authenticated = context.copilot_state.get("authenticated", True)
+    context.copilot_state["enabled"] = installed and authenticated
 
 
 @then("Copilot CLI is available as an assistant")
@@ -242,3 +258,26 @@ def step_insert_copilot_suggestion(context):
     assert has_event_handler(js_source, "assistantSuggestions", "click"), "Suggestion click handler missing"
     assert has_function(js_source, "insertSuggestion"), "Suggestion insertion handler missing"
     assert js_inserts_suggestion(js_source), "Suggestion insertion does not update description"
+
+
+@given("Copilot CLI is not installed")
+def step_copilot_not_installed(context):
+    js_source = context.copilot_state["js"]
+    assert js_sets_copilot_install_instructions(js_source), "Copilot install instructions are not wired"
+    context.copilot_state["installed"] = False
+    context.copilot_state["authenticated"] = False
+
+
+@then("I see instructions to install Copilot CLI")
+def step_copilot_install_instructions(context):
+    html = context.copilot_state["html"]
+    assert has_id(html, "copilot-instructions"), "Copilot install instructions element missing"
+    js_source = context.copilot_state["js"]
+    assert js_sets_copilot_install_instructions(js_source), "Copilot install instructions are not surfaced"
+
+
+@then("Copilot CLI is not enabled")
+def step_copilot_not_enabled(context):
+    assert context.copilot_state.get("enabled") is False, "Copilot CLI is unexpectedly enabled"
+    js_source = context.copilot_state["js"]
+    assert js_blocks_copilot_enable_when_not_ready(js_source), "Copilot enable guard missing"
