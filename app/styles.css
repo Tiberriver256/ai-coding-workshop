@@ -132,6 +132,15 @@ p {
   color: var(--muted);
   padding: 4px 10px;
 }
+.activity-panel { margin-top: 28px; background: var(--panel); border-radius: var(--radius); border: 1px solid var(--line); padding: 22px 28px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+.activity-panel::after { content: ''; position: absolute; bottom: -60px; left: -40px; width: 200px; height: 200px; border-radius: 999px; background: rgba(240, 165, 0, 0.12); pointer-events: none; }
+.activity-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; position: relative; }
+.activity-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.activity-meta { margin-top: 14px; display: inline-flex; align-items: center; gap: 10px; font-size: 0.9rem; color: var(--muted); }
+.activity-label { text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.7rem; color: var(--muted); }
+.activity-log { margin-top: 16px; display: grid; gap: 8px; }
+.activity-item { border-radius: 14px; border: 1px solid var(--line); background: #fff9ed; padding: 10px 12px; font-size: 0.85rem; color: #5a4c32; display: flex; justify-content: space-between; gap: 12px; }
+.activity-time { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; color: #8a8278; }
 .board {
   margin-top: 32px;
   display: grid;
@@ -210,6 +219,13 @@ p {
   color: #2d5a6b;
   text-transform: uppercase;
   letter-spacing: 0.12em;
+}
+.task-evidence {
+  margin-top: 6px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #5a4c32;
 }
 .task-actions {
   margin-top: 12px;
@@ -459,6 +475,10 @@ p {
     flex-direction: column;
     align-items: flex-start;
   }
+  .activity-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
   .primary,
   .ghost {
     width: 100%;
@@ -467,6 +487,9 @@ p {
   .header-actions {
     width: 100%;
     flex-direction: column;
+  }
+  .activity-actions {
+    width: 100%;
   }
   .qr-shell {
     grid-template-columns: 1fr;

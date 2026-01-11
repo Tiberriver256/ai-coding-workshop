@@ -1,37 +1,11 @@
 const storageKey = 'slice0001.tasks';
 const defaultAttemptStatus = 'running';
-const defaultAgentConfig = {
-  provider: 'OpenAI',
-  model: 'gpt-4.1-mini',
-  temperature: 0.2,
-};
+const defaultAgentConfig = { provider: 'OpenAI', model: 'gpt-4.1-mini', temperature: 0.2 };
 const assistantSuggestionTemplates = ['Draft a step-by-step plan with milestones and a clear definition of done.', 'List the files to inspect, the changes to make, and the tests to run.', 'Summarize the expected behavior and call out edge cases to verify.'];
-const todoList = document.getElementById('todo-list');
-const todoCount = document.getElementById('todo-count');
-const inProgressList = document.getElementById('in-progress-list');
-const inProgressCount = document.getElementById('in-progress-count');
-const inReviewList = document.getElementById('in-review-list');
-const inReviewCount = document.getElementById('in-review-count');
-const doneList = document.getElementById('done-list');
-const doneCount = document.getElementById('done-count');
-const taskModal = document.getElementById('task-modal');
-const openModalButton = document.getElementById('open-modal');
-const closeModalButton = document.getElementById('close-modal');
-const cancelModalButton = document.getElementById('cancel-modal');
-const form = document.getElementById('task-form');
-const titleInput = document.getElementById('task-title');
-const descriptionInput = document.getElementById('task-description');
-const assistantPanel = document.getElementById('assistant-panel');
-const assistantToggle = document.getElementById('assistant-toggle');
-const assistantSuggestButton = document.getElementById('assistant-suggest');
-const assistantSuggestions = document.getElementById('assistant-suggestions');
-const titleError = document.getElementById('title-error');
-const connectModal = document.getElementById('connect-modal');
-const openConnectButton = document.getElementById('open-connect');
-const closeConnectButton = document.getElementById('close-connect');
-const qrCodeContainer = document.getElementById('qr-code');
-const mobileUrlInput = document.getElementById('mobile-url');
-const copyLinkButton = document.getElementById('copy-link');
+const activityTaskId = 'task_agent_activity_demo';
+const activityEvidenceTypes = { attempt_started: 'attempt_started', attempt_completed: 'attempt_completed', task_merged: 'task_merged' };
+const activityEvidenceLabels = { attempt_started: 'Attempt started', attempt_completed: 'Attempt completed', task_merged: 'Merged into main' };
+const todoList = document.getElementById('todo-list'), todoCount = document.getElementById('todo-count'), inProgressList = document.getElementById('in-progress-list'), inProgressCount = document.getElementById('in-progress-count'), inReviewList = document.getElementById('in-review-list'), inReviewCount = document.getElementById('in-review-count'), doneList = document.getElementById('done-list'), doneCount = document.getElementById('done-count'), taskModal = document.getElementById('task-modal'), openModalButton = document.getElementById('open-modal'), closeModalButton = document.getElementById('close-modal'), cancelModalButton = document.getElementById('cancel-modal'), form = document.getElementById('task-form'), titleInput = document.getElementById('task-title'), descriptionInput = document.getElementById('task-description'), assistantPanel = document.getElementById('assistant-panel'), assistantToggle = document.getElementById('assistant-toggle'), assistantSuggestButton = document.getElementById('assistant-suggest'), assistantSuggestions = document.getElementById('assistant-suggestions'), titleError = document.getElementById('title-error'), connectModal = document.getElementById('connect-modal'), openConnectButton = document.getElementById('open-connect'), closeConnectButton = document.getElementById('close-connect'), qrCodeContainer = document.getElementById('qr-code'), mobileUrlInput = document.getElementById('mobile-url'), copyLinkButton = document.getElementById('copy-link'), activityPanel = document.getElementById('agent-activity'), activityTaskTitle = document.getElementById('activity-task-title'), activityStartButton = document.getElementById('activity-start'), activityCompleteButton = document.getElementById('activity-complete'), activityMergeButton = document.getElementById('activity-merge'), activityLog = document.getElementById('activity-log');
 let tasks = loadTasks();
 let assistantEnabled = false;
 let assistantDrafts = [];
@@ -45,108 +19,55 @@ const columnConfig = [
 function loadTasks() {
   try {
     const raw = localStorage.getItem(storageKey);
-    if (!raw) {
-      return [];
-    }
+    if (!raw) { return []; }
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-    return parsed
-      .map((task) => normalizeTask(task))
-      .filter((task) => task !== null);
+    if (!Array.isArray(parsed)) { return []; }
+    return parsed.map((task) => normalizeTask(task)).filter((task) => task !== null);
   } catch (error) {
     console.warn('Failed to read tasks from localStorage', error);
     return [];
   }
 }
 function normalizeAttempt(attempt) {
-  if (!attempt || typeof attempt !== 'object') {
-    return null;
-  }
-  const startedAt =
-    typeof attempt.startedAt === 'string' && attempt.startedAt.trim()
-      ? attempt.startedAt
-      : new Date().toISOString();
-  const status =
-    typeof attempt.status === 'string' && attempt.status.trim()
-      ? attempt.status.trim().toLowerCase()
-      : defaultAttemptStatus;
-  const agent =
-    attempt.agent && typeof attempt.agent === 'object'
-      ? { ...defaultAgentConfig, ...attempt.agent }
-      : { ...defaultAgentConfig };
-  return {
-    ...attempt,
-    status,
-    startedAt,
-    agent,
-  };
+  if (!attempt || typeof attempt !== 'object') { return null; }
+  const startedAt = typeof attempt.startedAt === 'string' && attempt.startedAt.trim() ? attempt.startedAt : new Date().toISOString();
+  const status = typeof attempt.status === 'string' && attempt.status.trim() ? attempt.status.trim().toLowerCase() : defaultAttemptStatus;
+  const agent = attempt.agent && typeof attempt.agent === 'object' ? { ...defaultAgentConfig, ...attempt.agent } : { ...defaultAgentConfig };
+  return { ...attempt, status, startedAt, agent };
+}
+function normalizeEvidenceEntry(entry) {
+  if (!entry || typeof entry !== 'object') { return null; }
+  const timestamp = typeof entry.timestamp === 'string' && entry.timestamp.trim() ? entry.timestamp : new Date().toISOString();
+  const type = typeof entry.type === 'string' && entry.type.trim() ? entry.type.trim().toLowerCase() : 'update';
+  const note = typeof entry.note === 'string' ? entry.note : '';
+  const id = typeof entry.id === 'string' && entry.id.trim() ? entry.id : createEvidenceId();
+  return { ...entry, id, type, note, timestamp };
 }
 function normalizeTask(task) {
-  if (!task || typeof task !== 'object') {
-    return null;
-  }
-  const createdAt =
-    typeof task.createdAt === 'string' && task.createdAt.trim()
-      ? task.createdAt
-      : new Date().toISOString();
-  const attempts = Array.isArray(task.attempts)
-    ? task.attempts.map((attempt) => normalizeAttempt(attempt)).filter(Boolean)
-    : [];
-  const activeAttemptId =
-    typeof task.activeAttemptId === 'string' && task.activeAttemptId.trim()
-      ? task.activeAttemptId
-      : attempts[0]?.id || null;
-  return {
-    ...task,
-    status: normalizeStatus(task.status),
-    createdAt,
-    updatedAt:
-      typeof task.updatedAt === 'string' && task.updatedAt.trim() ? task.updatedAt : createdAt,
-    attempts,
-    activeAttemptId,
-  };
+  if (!task || typeof task !== 'object') { return null; }
+  const createdAt = typeof task.createdAt === 'string' && task.createdAt.trim() ? task.createdAt : new Date().toISOString();
+  const attempts = Array.isArray(task.attempts) ? task.attempts.map((attempt) => normalizeAttempt(attempt)).filter(Boolean) : [];
+  const evidence = Array.isArray(task.evidence) ? task.evidence.map((entry) => normalizeEvidenceEntry(entry)).filter(Boolean) : [];
+  const activeAttemptId = typeof task.activeAttemptId === 'string' && task.activeAttemptId.trim() ? task.activeAttemptId : attempts[0]?.id || null;
+  return { ...task, status: normalizeStatus(task.status), createdAt, updatedAt: typeof task.updatedAt === 'string' && task.updatedAt.trim() ? task.updatedAt : createdAt, attempts, activeAttemptId, evidence };
 }
-function normalizeStatus(status) {
-  if (typeof status !== 'string') {
-    return 'todo';
-  }
-  const normalized = status.trim().toLowerCase();
-  return statusAliases[normalized] || 'todo';
-}
-function saveTasks() {
-  localStorage.setItem(storageKey, JSON.stringify(tasks));
-}
-function createTaskId() {
-  return `task_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-}
-function createAttemptId() {
-  return `attempt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-}
-function createAttempt(config) {
-  const timestamp = new Date().toISOString();
-  return {
-    id: createAttemptId(),
-    status: defaultAttemptStatus,
-    startedAt: timestamp,
-    updatedAt: timestamp,
-    agent: { ...config },
-  };
-}
+function normalizeStatus(status) { if (typeof status !== 'string') { return 'todo'; } const normalized = status.trim().toLowerCase(); return statusAliases[normalized] || 'todo'; }
+function saveTasks() { localStorage.setItem(storageKey, JSON.stringify(tasks)); }
+function createTaskId() { return `task_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
+function createAttemptId() { return `attempt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
+function createEvidenceId() { return `evidence_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
+function createAttempt(config) { const timestamp = new Date().toISOString(); return { id: createAttemptId(), status: defaultAttemptStatus, startedAt: timestamp, updatedAt: timestamp, agent: { ...config } }; }
 function formatTimestamp(isoString) {
   try {
     const date = new Date(isoString);
-    return date.toLocaleString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-  } catch (error) {
-    return 'Just now';
-  }
+    return date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  } catch (error) { return 'Just now'; }
 }
+function formatEvidenceLabel(type) { return !type ? 'Update logged' : activityEvidenceLabels[type] || type.replace(/_/g, ' '); }
+function recordEvidence(task, type, note) { if (!task) { return null; } const timestamp = new Date().toISOString(); const entry = { id: createEvidenceId(), type, note: note || '', timestamp }; task.evidence = [...(Array.isArray(task.evidence) ? task.evidence : []), entry]; task.updatedAt = timestamp; return entry; }
+function createActivityTask() { const timestamp = new Date().toISOString(); return { id: activityTaskId, title: 'Agent status demo', description: 'Track this task as the agent moves through start, review, and merge.', status: 'todo', createdAt: timestamp, updatedAt: timestamp, attempts: [], activeAttemptId: null, evidence: [], isDemo: true }; }
+function seedActivityTask() { if (tasks.some((task) => task.id === activityTaskId) || tasks.some((task) => normalizeStatus(task.status) === 'todo')) { return; } tasks = [createActivityTask(), ...tasks]; saveTasks(); }
+function findTaskById(taskId) { return tasks.find((task) => task.id === taskId); }
 function renderTasks() {
   const grouped = {
     todo: [],
@@ -165,6 +86,7 @@ function renderTasks() {
     });
     column.count.textContent = grouped[column.key].length.toString();
   });
+  renderActivityPanel();
 }
 function getActiveAttempt(task) {
   if (!task || !Array.isArray(task.attempts) || task.attempts.length === 0) {
@@ -216,6 +138,7 @@ function renderTaskList(listElement, list, options) {
         : `Attempt ${statusLabel}`;
       card.appendChild(attemptMeta);
     }
+    if (Array.isArray(task.evidence) && task.evidence.length > 0) { const latest = task.evidence[task.evidence.length - 1]; const evidence = document.createElement('div'); evidence.className = 'task-evidence'; const label = latest ? formatEvidenceLabel(latest.type) : 'Evidence logged'; evidence.textContent = `${label} · ${task.evidence.length} update${task.evidence.length === 1 ? '' : 's'}`; card.appendChild(evidence); }
     if (task.status === 'done') {
       const status = document.createElement('div');
       status.className = 'task-status';
@@ -235,6 +158,38 @@ function renderTaskList(listElement, list, options) {
     }
     listElement.appendChild(card);
   });
+}
+function renderActivityLog(task) {
+  if (!activityLog) { return; }
+  activityLog.innerHTML = '';
+  if (!task) { const empty = document.createElement('div'); empty.className = 'empty'; empty.textContent = 'No activity task available.'; activityLog.appendChild(empty); return; }
+  if (!Array.isArray(task.evidence) || task.evidence.length === 0) { const empty = document.createElement('div'); empty.className = 'empty'; empty.textContent = 'No agent activity recorded yet.'; activityLog.appendChild(empty); return; }
+  [...task.evidence].slice(-5).reverse().forEach((entry) => {
+    const item = document.createElement('div');
+    item.className = 'activity-item';
+    const label = document.createElement('span');
+    label.textContent = formatEvidenceLabel(entry.type);
+    const time = document.createElement('span');
+    time.className = 'activity-time';
+    time.textContent = formatTimestamp(entry.timestamp);
+    item.append(label, time);
+    activityLog.appendChild(item);
+  });
+}
+function updateActivityControls(task) {
+  if (!activityStartButton || !activityCompleteButton || !activityMergeButton) { return; }
+  if (!task) { activityStartButton.disabled = true; activityCompleteButton.disabled = true; activityMergeButton.disabled = true; return; }
+  const status = normalizeStatus(task.status);
+  activityStartButton.disabled = status !== 'todo';
+  activityCompleteButton.disabled = status !== 'in_progress';
+  activityMergeButton.disabled = status !== 'in_review';
+}
+function renderActivityPanel() {
+  if (!activityPanel) { return; }
+  const task = findTaskById(activityTaskId);
+  if (activityTaskTitle) { activityTaskTitle.textContent = task ? task.title : 'No active task'; }
+  renderActivityLog(task);
+  updateActivityControls(task);
 }
 function openTaskModal() {
   taskModal.setAttribute('aria-hidden', 'false');
@@ -341,6 +296,7 @@ function buildTaskPayload({ title, description, startAttempt }) {
     updatedAt: timestamp,
     attempts: [],
     activeAttemptId: null,
+    evidence: [],
   };
   if (startAttempt) {
     const attempt = createAttempt(defaultAgentConfig);
@@ -392,6 +348,9 @@ if (assistantSuggestions) {
     insertSuggestion(button.dataset.suggestion);
   });
 }
+if (activityStartButton) { activityStartButton.addEventListener('click', () => startTaskAttempt(activityTaskId)); }
+if (activityCompleteButton) { activityCompleteButton.addEventListener('click', () => completeTaskAttempt(activityTaskId)); }
+if (activityMergeButton) { activityMergeButton.addEventListener('click', () => mergeTask(activityTaskId)); }
 setAssistantEnabled(Boolean(assistantToggle?.checked));
 form.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -411,6 +370,9 @@ form.addEventListener('submit', (event) => {
   renderTasks();
   closeTaskModal();
 });
+function startTaskAttempt(taskId) { const task = findTaskById(taskId); if (!task) { return; } const attempt = createAttempt(defaultAgentConfig); const attempts = Array.isArray(task.attempts) ? task.attempts : []; task.attempts = [attempt, ...attempts]; task.activeAttemptId = attempt.id; task.status = 'in_progress'; recordEvidence(task, activityEvidenceTypes.attempt_started, 'Attempt started'); saveTasks(); renderTasks(); }
+function completeTaskAttempt(taskId) { const task = findTaskById(taskId); if (!task) { return; } const timestamp = new Date().toISOString(); const activeAttempt = getActiveAttempt(task); if (activeAttempt) { activeAttempt.status = 'completed'; activeAttempt.updatedAt = timestamp; } task.status = 'in_review'; recordEvidence(task, activityEvidenceTypes.attempt_completed, 'Attempt completed'); saveTasks(); renderTasks(); }
+function mergeTask(taskId) { const task = findTaskById(taskId); if (!task) { return; } task.status = 'done'; recordEvidence(task, activityEvidenceTypes.task_merged, 'Merged to main'); saveTasks(); renderTasks(); }
 function markTaskDone(taskId) {
   const index = tasks.findIndex((task) => task.id === taskId);
   if (index === -1) {
@@ -487,4 +449,5 @@ window.addEventListener('storage', (event) => {
     renderTasks();
   }
 });
+seedActivityTask();
 renderTasks();

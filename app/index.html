@@ -20,6 +20,26 @@
         </div>
       </header>
 
+      <section class="activity-panel" id="agent-activity" aria-labelledby="activity-title">
+        <div class="activity-header">
+          <div>
+            <p class="eyebrow">Agent Activity</p>
+            <h2 id="activity-title">Task status updates</h2>
+            <p class="subtitle">Simulate attempt start, review, and merge events.</p>
+          </div>
+          <div class="activity-actions">
+            <button class="ghost" id="activity-start" type="button">Start Attempt</button>
+            <button class="ghost" id="activity-complete" type="button">Complete Attempt</button>
+            <button class="ghost" id="activity-merge" type="button">Merge Task</button>
+          </div>
+        </div>
+        <div class="activity-meta">
+          <span class="activity-label">Tracking</span>
+          <span id="activity-task-title">No active task</span>
+        </div>
+        <div class="activity-log" id="activity-log" role="list"></div>
+      </section>
+
       <main class="board">
         <section class="column" aria-labelledby="todo-title">
           <div class="column-header">
