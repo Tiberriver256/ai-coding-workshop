@@ -27,6 +27,7 @@ WIP limit: 5 active delegates. Update cards with evidence links.
 - (empty)
 
 ## Done
+- `docs/kanban/cards/feature-codex-cli-authenticated.md`
 - `docs/kanban/cards/feature-task-orchestration-create-task.md`
 - `docs/kanban/cards/feature-task-orchestration-create-start.md`
 - `docs/kanban/cards/feature-task-orchestration-title-required.md`

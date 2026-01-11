@@ -1,11 +1,17 @@
 #!/usr/bin/env node
+const fs = require('fs');
 const os = require('os');
+const path = require('path');
+
+const AUTH_TOKEN_ENV = 'UNIFIED_AUTH_TOKEN';
+const AUTH_FILE_ENV = 'UNIFIED_AUTH_FILE';
 
 function printHelp() {
   console.log(`Usage: unified <command>
 
 Commands:
   auth login    Pair this computer with the mobile app
+  codex         Start a Codex session (requires authentication)
 
 Options:
   --force       Force re-authentication and re-pair the device
@@ -40,6 +46,32 @@ function renderQrPlaceholder(token) {
   return `${frame.join('\n')}\nToken: ${token}`;
 }
 
+function resolveAuthFile() {
+  if (process.env[AUTH_FILE_ENV]) {
+    return process.env[AUTH_FILE_ENV];
+  }
+  return path.join(os.homedir(), '.unified-auth.json');
+}
+
+function readAuthTokenFromFile(filePath) {
+  try {
+    const raw = fs.readFileSync(filePath, 'utf8');
+    const payload = JSON.parse(raw);
+    return payload.token || payload.access_token || payload.authToken || null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function isAuthenticated() {
+  const envToken = process.env[AUTH_TOKEN_ENV];
+  if (envToken && envToken.trim()) {
+    return true;
+  }
+  const fileToken = readAuthTokenFromFile(resolveAuthFile());
+  return Boolean(fileToken && String(fileToken).trim());
+}
+
 function handleAuthLogin(forceReauth) {
   const token = createPairingToken();
   const deviceName = defaultDeviceName();
@@ -57,6 +89,25 @@ function handleAuthLogin(forceReauth) {
   console.log('If rejected, this screen will show: Pairing request rejected.');
 }
 
+function createSessionId() {
+  const now = Date.now().toString(36);
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `codex-${now}-${rand}`;
+}
+
+function handleCodexCommand() {
+  if (!isAuthenticated()) {
+    console.error('Not authenticated. Run "unified auth login" to pair this device.');
+    process.exitCode = 1;
+    return;
+  }
+
+  const sessionId = createSessionId();
+  console.log('Codex session started.');
+  console.log(`Session: ${sessionId}`);
+  console.log('Connected for remote access.');
+}
+
 function main() {
   const args = process.argv.slice(2);
   if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
@@ -67,6 +118,11 @@ function main() {
   if (args[0] === 'auth' && args[1] === 'login') {
     const forceReauth = args.includes('--force');
     handleAuthLogin(forceReauth);
+    return;
+  }
+
+  if (args[0] === 'codex') {
+    handleCodexCommand();
     return;
   }
 
