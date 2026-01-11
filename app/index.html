@@ -52,6 +52,32 @@
         <div class="device-list" id="device-list" role="list"></div>
       </section>
 
+      <section class="settings-panel" id="settings-panel" aria-labelledby="settings-title">
+        <div class="settings-header">
+          <div>
+            <p class="eyebrow">Settings</p>
+            <h2 id="settings-title">Integrations</h2>
+            <p class="subtitle">Connect CLI assistants for faster task prompts.</p>
+          </div>
+        </div>
+        <div class="integration-grid">
+          <article class="integration-card" data-provider="copilot-cli">
+            <div>
+              <h3>Copilot CLI</h3>
+              <p class="integration-copy">Use Copilot CLI to power task prompt autocomplete.</p>
+              <div class="integration-meta">
+                <span class="integration-status" id="copilot-status">Ready to connect</span>
+                <span class="integration-pill" id="copilot-pill">Available</span>
+              </div>
+            </div>
+            <label class="integration-toggle">
+              <input id="copilot-toggle" type="checkbox" />
+              <span>Enable</span>
+            </label>
+          </article>
+        </div>
+      </section>
+
       <section class="search-panel" aria-label="Search tasks">
         <div class="search-content">
           <div>
@@ -153,6 +179,13 @@
                 <span>Enable</span>
               </label>
             </div>
+            <label class="assistant-field">
+              <span class="assistant-field-label">Assistant</span>
+              <select id="assistant-provider">
+                <option value="templates">Template assistant</option>
+                <option value="copilot-cli" disabled>Copilot CLI</option>
+              </select>
+            </label>
             <div class="assistant-actions">
               <button class="ghost" id="assistant-suggest" type="button" disabled>
                 Suggest instructions

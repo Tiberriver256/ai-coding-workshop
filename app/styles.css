@@ -148,6 +148,18 @@ p {
 .device-card h4 { margin: 0; font-size: 1rem; }
 .device-meta { font-size: 0.8rem; color: var(--muted); }
 .device-status { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.14em; color: #5a4c32; }
+.settings-panel { margin-top: 24px; background: var(--panel); border-radius: var(--radius); border: 1px solid var(--line); padding: 22px 28px; box-shadow: var(--shadow); }
+.settings-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.integration-grid { display: grid; gap: 16px; }
+.integration-card { border-radius: 18px; border: 1px solid var(--line); padding: 16px 18px; background: #fff7e6; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.integration-card h3 { margin: 0 0 6px; font-size: 1.1rem; }
+.integration-copy { color: var(--muted); font-size: 0.95rem; margin: 0 0 10px; }
+.integration-meta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 0.8rem; color: var(--muted); }
+.integration-status { font-weight: 500; }
+.integration-pill { padding: 4px 10px; border-radius: 999px; background: #e8f0e3; color: #3c5a3e; text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.68rem; }
+.integration-pill.is-muted { background: #f4e7d6; color: #7a6e60; }
+.integration-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--muted); }
+.integration-toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
 .search-panel { margin-top: 24px; background: var(--panel); border-radius: var(--radius); border: 1px solid var(--line); padding: 20px 28px; box-shadow: var(--shadow); }
 .search-content { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
 .search-input { display: grid; gap: 8px; min-width: 240px; }
@@ -384,10 +396,11 @@ p {
   color: var(--muted);
   margin-bottom: 4px;
 }
-.assistant-hint {
-  color: var(--muted);
-  font-size: 0.9rem;
-}
+.assistant-hint { color: var(--muted); font-size: 0.9rem; }
+.assistant-field { display: grid; gap: 8px; font-weight: 500; }
+.assistant-field-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.18em; color: var(--muted); }
+.assistant-field select { border-radius: 12px; border: 1px solid var(--line); padding: 10px 12px; font-family: inherit; font-size: 0.95rem; background: #fff; }
+.assistant-field select:focus { outline: 2px solid rgba(240, 165, 0, 0.45); border-color: var(--accent); }
 .assistant-toggle {
   display: inline-flex;
   align-items: center;

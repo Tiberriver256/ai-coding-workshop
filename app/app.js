@@ -1,18 +1,23 @@
 const storageKey = 'slice0001.tasks';
 const pairingRequestKey = 'slice0001.pairing_request';
 const pairedDevicesKey = 'slice0001.devices';
+const copilotSettingsKey = 'slice0001.copilot_cli';
+const assistantProviderKey = 'slice0001.assistant_provider';
 const defaultAttemptStatus = 'running';
 const defaultAgentConfig = { provider: 'OpenAI', model: 'gpt-4.1-mini', temperature: 0.2 };
+const defaultCopilotSettings = { installed: true, authenticated: true, enabled: false };
 const assistantSuggestionTemplates = ['Draft a step-by-step plan with milestones and a clear definition of done.', 'List the files to inspect, the changes to make, and the tests to run.', 'Summarize the expected behavior and call out edge cases to verify.'];
 const activityTaskId = 'task_agent_activity_demo';
 const activityEvidenceTypes = { attempt_started: 'attempt_started', attempt_completed: 'attempt_completed', task_merged: 'task_merged' };
 const activityEvidenceLabels = { attempt_started: 'Attempt started', attempt_completed: 'Attempt completed', task_merged: 'Merged into main' };
-const todoList = document.getElementById('todo-list'), todoCount = document.getElementById('todo-count'), inProgressList = document.getElementById('in-progress-list'), inProgressCount = document.getElementById('in-progress-count'), inReviewList = document.getElementById('in-review-list'), inReviewCount = document.getElementById('in-review-count'), doneList = document.getElementById('done-list'), doneCount = document.getElementById('done-count'), taskModal = document.getElementById('task-modal'), openModalButton = document.getElementById('open-modal'), closeModalButton = document.getElementById('close-modal'), cancelModalButton = document.getElementById('cancel-modal'), form = document.getElementById('task-form'), titleInput = document.getElementById('task-title'), descriptionInput = document.getElementById('task-description'), assistantPanel = document.getElementById('assistant-panel'), assistantToggle = document.getElementById('assistant-toggle'), assistantSuggestButton = document.getElementById('assistant-suggest'), assistantSuggestions = document.getElementById('assistant-suggestions'), titleError = document.getElementById('title-error'), connectModal = document.getElementById('connect-modal'), openConnectButton = document.getElementById('open-connect'), openPairingButton = document.getElementById('open-pairing'), closeConnectButton = document.getElementById('close-connect'), qrCodeContainer = document.getElementById('qr-code'), pairingLinkInput = document.getElementById('pairing-link'), copyLinkButton = document.getElementById('copy-link'), activityPanel = document.getElementById('agent-activity'), activityTaskTitle = document.getElementById('activity-task-title'), activityStartButton = document.getElementById('activity-start'), activityCompleteButton = document.getElementById('activity-complete'), activityMergeButton = document.getElementById('activity-merge'), activityLog = document.getElementById('activity-log'), searchInput = document.getElementById('task-search'), deviceList = document.getElementById('device-list'), pairingStatus = document.getElementById('pairing-status');
+const todoList = document.getElementById('todo-list'), todoCount = document.getElementById('todo-count'), inProgressList = document.getElementById('in-progress-list'), inProgressCount = document.getElementById('in-progress-count'), inReviewList = document.getElementById('in-review-list'), inReviewCount = document.getElementById('in-review-count'), doneList = document.getElementById('done-list'), doneCount = document.getElementById('done-count'), taskModal = document.getElementById('task-modal'), openModalButton = document.getElementById('open-modal'), closeModalButton = document.getElementById('close-modal'), cancelModalButton = document.getElementById('cancel-modal'), form = document.getElementById('task-form'), titleInput = document.getElementById('task-title'), descriptionInput = document.getElementById('task-description'), assistantPanel = document.getElementById('assistant-panel'), assistantToggle = document.getElementById('assistant-toggle'), assistantProviderSelect = document.getElementById('assistant-provider'), assistantSuggestButton = document.getElementById('assistant-suggest'), assistantSuggestions = document.getElementById('assistant-suggestions'), titleError = document.getElementById('title-error'), connectModal = document.getElementById('connect-modal'), openConnectButton = document.getElementById('open-connect'), openPairingButton = document.getElementById('open-pairing'), closeConnectButton = document.getElementById('close-connect'), qrCodeContainer = document.getElementById('qr-code'), pairingLinkInput = document.getElementById('pairing-link'), copyLinkButton = document.getElementById('copy-link'), activityPanel = document.getElementById('agent-activity'), activityTaskTitle = document.getElementById('activity-task-title'), activityStartButton = document.getElementById('activity-start'), activityCompleteButton = document.getElementById('activity-complete'), activityMergeButton = document.getElementById('activity-merge'), activityLog = document.getElementById('activity-log'), searchInput = document.getElementById('task-search'), deviceList = document.getElementById('device-list'), pairingStatus = document.getElementById('pairing-status'), copilotToggle = document.getElementById('copilot-toggle'), copilotStatus = document.getElementById('copilot-status'), copilotPill = document.getElementById('copilot-pill');
 let tasks = loadTasks();
 let pairedDevices = loadPairedDevices();
 let pairingRequest = loadPairingRequest();
+let copilotSettings = loadCopilotSettings();
 let assistantEnabled = false;
 let assistantDrafts = [];
+let assistantProvider = loadAssistantProvider();
 let searchQuery = '';
 const statusAliases = { todo: 'todo', 'in progress': 'in_progress', 'in-progress': 'in_progress', in_progress: 'in_progress', 'in review': 'in_review', 'in-review': 'in_review', in_review: 'in_review', done: 'done' };
 const columnConfig = [
@@ -66,6 +71,52 @@ function savePairingRequest(request) {
     return;
   }
   localStorage.setItem(pairingRequestKey, JSON.stringify(request));
+}
+function normalizeCopilotSettings(settings) {
+  if (!settings || typeof settings !== 'object') {
+    return { ...defaultCopilotSettings };
+  }
+  return {
+    installed: typeof settings.installed === 'boolean' ? settings.installed : defaultCopilotSettings.installed,
+    authenticated: typeof settings.authenticated === 'boolean' ? settings.authenticated : defaultCopilotSettings.authenticated,
+    enabled: Boolean(settings.enabled),
+  };
+}
+function loadCopilotSettings() {
+  try {
+    const raw = localStorage.getItem(copilotSettingsKey);
+    if (!raw) { return { ...defaultCopilotSettings }; }
+    const parsed = JSON.parse(raw);
+    return normalizeCopilotSettings(parsed);
+  } catch (error) {
+    console.warn('Failed to read Copilot CLI settings', error);
+    return { ...defaultCopilotSettings };
+  }
+}
+function saveCopilotSettings(settings) {
+  localStorage.setItem(copilotSettingsKey, JSON.stringify(settings));
+}
+function isCopilotReady(settings) {
+  return Boolean(settings?.installed) && Boolean(settings?.authenticated);
+}
+function normalizeAssistantProvider(value, allowCopilot) {
+  if (value === 'copilot-cli' && allowCopilot) {
+    return 'copilot-cli';
+  }
+  return 'templates';
+}
+function loadAssistantProvider() {
+  try {
+    const raw = localStorage.getItem(assistantProviderKey);
+    if (!raw) { return normalizeAssistantProvider('templates', copilotSettings?.enabled); }
+    return normalizeAssistantProvider(raw, copilotSettings?.enabled);
+  } catch (error) {
+    console.warn('Failed to read assistant provider', error);
+    return normalizeAssistantProvider('templates', copilotSettings?.enabled);
+  }
+}
+function saveAssistantProvider(value) {
+  localStorage.setItem(assistantProviderKey, value);
 }
 function normalizeAttempt(attempt) {
   if (!attempt || typeof attempt !== 'object') { return null; }
@@ -234,7 +285,7 @@ function openTaskModal() { taskModal.setAttribute('aria-hidden', 'false'); taskM
 function closeTaskModal() { taskModal.setAttribute('aria-hidden', 'true'); taskModal.setAttribute('data-state', 'closed'); form.reset(); clearValidation(); resetAssistantUI(); }
 function clearValidation() { titleError.textContent = ''; titleInput.removeAttribute('aria-invalid'); }
 function validateForm() { const titleValue = titleInput.value.trim(); if (!titleValue) { titleError.textContent = 'Title is required.'; titleInput.setAttribute('aria-invalid', 'true'); titleInput.focus(); return false; } clearValidation(); return true; }
-function clearAssistantSuggestions() { if (!assistantSuggestions) { return; } assistantSuggestions.innerHTML = ''; assistantSuggestions.setAttribute('data-state', 'empty'); }
+function clearAssistantSuggestions() { if (!assistantSuggestions) { return; } assistantSuggestions.innerHTML = ''; assistantSuggestions.setAttribute('data-state', 'empty'); assistantSuggestions.removeAttribute('data-provider'); }
 function renderAssistantSuggestions(suggestions) {
   if (!assistantSuggestions) { return; }
   assistantSuggestions.innerHTML = '';
@@ -242,8 +293,55 @@ function renderAssistantSuggestions(suggestions) {
   assistantSuggestions.setAttribute('data-state', 'ready');
   suggestions.forEach((suggestion) => { const button = document.createElement('button'); button.type = 'button'; button.className = 'assistant-suggestion'; button.dataset.suggestion = suggestion; const label = document.createElement('span'); label.className = 'assistant-suggestion-label'; label.textContent = 'Use suggestion'; const text = document.createElement('span'); text.className = 'assistant-suggestion-text'; text.textContent = suggestion; button.append(label, text); assistantSuggestions.appendChild(button); });
 }
+function updateCopilotStatusUI() {
+  if (!copilotStatus || !copilotPill || !copilotToggle) { return; }
+  const ready = isCopilotReady(copilotSettings);
+  copilotToggle.disabled = !ready;
+  copilotToggle.checked = Boolean(copilotSettings?.enabled) && ready;
+  if (!ready) {
+    copilotStatus.textContent = 'Copilot CLI not ready';
+    copilotPill.textContent = 'Unavailable';
+    copilotPill.classList.add('is-muted');
+    return;
+  }
+  if (copilotSettings?.enabled) {
+    copilotStatus.textContent = 'Connected';
+    copilotPill.textContent = 'Connected';
+    copilotPill.classList.remove('is-muted');
+    return;
+  }
+  copilotStatus.textContent = 'Ready to connect';
+  copilotPill.textContent = 'Available';
+  copilotPill.classList.add('is-muted');
+}
+function updateAssistantProviderAvailability() {
+  if (!assistantProviderSelect) { return; }
+  const copilotOption = assistantProviderSelect.querySelector('option[value="copilot-cli"]');
+  if (copilotOption) {
+    copilotOption.disabled = !copilotSettings?.enabled;
+  }
+  const normalized = normalizeAssistantProvider(assistantProviderSelect.value, copilotSettings?.enabled);
+  if (normalized !== assistantProviderSelect.value) {
+    assistantProviderSelect.value = normalized;
+  }
+  setAssistantProvider(assistantProviderSelect.value);
+}
+function setCopilotEnabled(enabled) {
+  const ready = isCopilotReady(copilotSettings);
+  const nextEnabled = ready && Boolean(enabled);
+  copilotSettings = { ...copilotSettings, enabled: nextEnabled };
+  saveCopilotSettings(copilotSettings);
+  updateCopilotStatusUI();
+  updateAssistantProviderAvailability();
+}
+function setAssistantProvider(value) {
+  assistantProvider = normalizeAssistantProvider(value, copilotSettings?.enabled);
+  if (assistantProviderSelect) { assistantProviderSelect.value = assistantProvider; }
+  saveAssistantProvider(assistantProvider);
+  if (assistantPanel) { assistantPanel.setAttribute('data-provider', assistantProvider); }
+}
 function setAssistantEnabled(enabled) { assistantEnabled = enabled; if (assistantSuggestButton) { assistantSuggestButton.disabled = !enabled; } if (assistantPanel) { assistantPanel.setAttribute('data-enabled', enabled ? 'true' : 'false'); } if (!enabled) { clearAssistantSuggestions(); assistantDrafts = []; } }
-function requestAssistantSuggestions() { if (!assistantEnabled) { return; } assistantDrafts = [...assistantSuggestionTemplates]; renderAssistantSuggestions(assistantDrafts); }
+function requestAssistantSuggestions() { if (!assistantEnabled) { return; } if (assistantProvider === 'copilot-cli' && !copilotSettings?.enabled) { return; } assistantDrafts = [...assistantSuggestionTemplates]; renderAssistantSuggestions(assistantDrafts); if (assistantSuggestions) { assistantSuggestions.setAttribute('data-provider', assistantProvider); } }
 function insertSuggestion(suggestion) { if (!suggestion) { return; } const current = descriptionInput.value.trim(); const spacer = current ? ' ' : ''; descriptionInput.value = `${current}${spacer}${suggestion}`; descriptionInput.focus(); }
 function resetAssistantUI() { if (assistantToggle) { assistantToggle.checked = false; } setAssistantEnabled(false); }
 function buildTaskPayload({ title, description, startAttempt }) {
@@ -260,13 +358,18 @@ window.addEventListener('keydown', (event) => { if (event.key !== 'Escape') { re
 titleInput.addEventListener('input', () => { if (titleInput.value.trim()) { clearValidation(); } });
 if (searchInput) { searchQuery = normalizeSearchQuery(searchInput.value); searchInput.addEventListener('input', (event) => { setSearchQuery(event.target.value); }); }
 if (assistantToggle) { assistantToggle.addEventListener('change', (event) => { setAssistantEnabled(event.target.checked); }); }
+if (assistantProviderSelect) { assistantProviderSelect.addEventListener('change', (event) => { setAssistantProvider(event.target.value); }); }
 if (assistantSuggestButton) { assistantSuggestButton.addEventListener('click', () => { requestAssistantSuggestions(); }); }
 if (assistantSuggestions) { assistantSuggestions.addEventListener('click', (event) => { const button = event.target.closest('button[data-suggestion]'); if (!button) { return; } insertSuggestion(button.dataset.suggestion); }); }
 if (activityStartButton) { activityStartButton.addEventListener('click', () => startTaskAttempt(activityTaskId)); }
 if (activityCompleteButton) { activityCompleteButton.addEventListener('click', () => completeTaskAttempt(activityTaskId)); }
 if (activityMergeButton) { activityMergeButton.addEventListener('click', () => mergeTask(activityTaskId)); }
+if (copilotToggle) { copilotToggle.addEventListener('change', (event) => { setCopilotEnabled(event.target.checked); }); }
 registerColumnDropTargets();
 setAssistantEnabled(Boolean(assistantToggle?.checked));
+setAssistantProvider(assistantProvider);
+updateCopilotStatusUI();
+updateAssistantProviderAvailability();
 form.addEventListener('submit', (event) => {
   event.preventDefault();
   if (!validateForm()) {
@@ -371,6 +474,17 @@ window.addEventListener('storage', (event) => {
   if (event.key === pairingRequestKey) {
     pairingRequest = loadPairingRequest();
     updatePairingStatus();
+    return;
+  }
+  if (event.key === copilotSettingsKey) {
+    copilotSettings = loadCopilotSettings();
+    updateCopilotStatusUI();
+    updateAssistantProviderAvailability();
+    return;
+  }
+  if (event.key === assistantProviderKey) {
+    assistantProvider = loadAssistantProvider();
+    setAssistantProvider(assistantProvider);
   }
 });
 seedActivityTask();
