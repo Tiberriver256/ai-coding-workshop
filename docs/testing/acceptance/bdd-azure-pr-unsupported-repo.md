@@ -51,7 +51,7 @@ Feature: Azure DevOps support for pull requests # tests/bdd/azure-devops-support
 1 feature passed, 0 failed, 0 skipped
 3 scenarios passed, 0 failed, 0 skipped
 17 steps passed, 0 failed, 0 skipped
-Took 0min 0.017s
+Took 0min 0.020s
 ```
 
 ## Notes
