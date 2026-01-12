@@ -112,6 +112,28 @@ def select_has_option(html, select_id, option_value):
     return bool(re.search(pattern, html))
 
 
+def github_cli_instructions_available(js_source):
+    return (
+        has_function(js_source, "setGithubCliInstructions")
+        and "Install GitHub CLI" in js_source
+        and "gh auth login" in js_source
+    )
+
+
+def pr_modal_surfaces_github_cli_instructions(js_source):
+    body = extract_function_body(js_source, "openPullRequestModal")
+    if not body:
+        return False
+    return "setGithubCliInstructions" in body and "isGithubCliReady" in body
+
+
+def pr_creation_blocked_without_github_cli(js_source):
+    body = extract_function_body(js_source, "createPullRequest")
+    if not body:
+        return False
+    return "isGithubCliReady" in body and "return null" in body
+
+
 @given("my project repository is hosted on GitHub")
 def step_project_hosted_on_github(context):
     context.github_state = {}
@@ -179,3 +201,36 @@ def step_task_shows_pr_status(context):
     js_source = context.github_state["js"]
     assert function_body_contains(js_source, "renderTaskList", "task.pullRequest"), "Task card does not read PR data"
     assert function_body_contains(js_source, "renderTaskList", "task-pr"), "Task PR status label missing"
+
+
+@given("the GitHub CLI is not installed or authenticated")
+def step_github_cli_missing(context):
+    js_source = context.github_state["js"]
+    assert github_cli_instructions_available(js_source), "GitHub CLI instructions are not wired"
+    context.github_state["installed"] = False
+    context.github_state["authenticated"] = False
+
+
+@when("I attempt to create a PR")
+def step_attempt_create_pr(context):
+    html = context.github_state["html"]
+    js_source = context.github_state["js"]
+    buttons = parse_buttons(html)
+    create_button = find_button_by_id(buttons, "activity-pr")
+    assert create_button, "Create PR button missing"
+    assert has_button_handler(js_source, "activity-pr", "openPullRequestModal"), "Create PR button is not wired"
+    assert pr_modal_surfaces_github_cli_instructions(js_source), "Missing GitHub CLI instructions not surfaced"
+
+
+@then("I see instructions to install and authenticate the GitHub CLI")
+def step_github_cli_instructions(context):
+    html = context.github_state["html"]
+    assert has_id(html, "github-cli-instructions"), "GitHub CLI instructions element missing"
+    js_source = context.github_state["js"]
+    assert github_cli_instructions_available(js_source), "GitHub CLI instructions are not visible"
+
+
+@then("the PR is not created")
+def step_pr_not_created(context):
+    js_source = context.github_state["js"]
+    assert pr_creation_blocked_without_github_cli(js_source), "PR creation guard missing when GitHub CLI is unavailable"

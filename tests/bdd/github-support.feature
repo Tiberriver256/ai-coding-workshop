@@ -14,3 +14,10 @@ Feature: GitHub support for pull requests
     And I can select a base branch
     And a pull request is created on GitHub
     And the task shows the PR status
+
+  Scenario: Missing GitHub CLI authentication prevents PR creation
+    Given a task attempt has changes
+    And the GitHub CLI is not installed or authenticated
+    When I attempt to create a PR
+    Then I see instructions to install and authenticate the GitHub CLI
+    And the PR is not created
