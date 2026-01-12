@@ -15,7 +15,7 @@ async function submitTask(page, { title, description }) {
   if (description) {
     await page.locator('#task-description').fill(description);
   }
-  await page.locator('#task-form button[type="submit"]').click();
+  await page.locator('#create-task').click();
   await expect(page.locator('#task-modal')).toHaveAttribute('aria-hidden', 'true');
 }
 
@@ -71,7 +71,7 @@ test('create task adds card to list', async ({ page }) => {
 
 test('empty title shows validation error and blocks create', async ({ page }) => {
   await openCreateModal(page);
-  await page.locator('#task-form button[type="submit"]').click();
+  await page.locator('#create-task').click();
 
   await expect(page.locator('#title-error')).toHaveText('Title is required.');
   await expect(page.locator('#task-count')).toHaveText('0');

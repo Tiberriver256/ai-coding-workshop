@@ -44,6 +44,24 @@ p { margin: 0; }
   color: var(--muted);
 }
 .subtitle { margin-top: 8px; color: var(--muted); }
+.task-summary {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff3da;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.task-summary-label {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.62rem;
+}
+.task-summary-count { font-weight: 600; color: var(--ink); }
 .primary,
 .ghost,
 .icon-button {

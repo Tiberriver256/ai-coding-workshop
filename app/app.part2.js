@@ -496,4 +496,4 @@ window.addEventListener('storage', (event) => {
     setAssistantProvider(assistantProvider);
   }
 });
-seedActivityTask(); seedReviewTask(); renderTasks(); renderSessionList();
+tasks = loadTasks(); sessions = loadSessions(); if (demoSeedEnabled) { seedActivityTask(); seedReviewTask(); } renderTasks(); renderSessionList();
