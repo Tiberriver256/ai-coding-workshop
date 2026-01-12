@@ -134,6 +134,28 @@ def pr_creation_blocked_without_github_cli(js_source):
     return "isGithubCliReady" in body and "return null" in body
 
 
+def pr_base_branch_error_visible(html):
+    return has_id(html, "pr-base-branch-error")
+
+
+def pr_base_branch_missing_option(html, option_value):
+    return select_has_option(html, "pr-base-branch", option_value)
+
+
+def missing_branch_not_in_remote_list(js_source, branch_value):
+    pattern = rf"githubRemoteBranches\s*=\s*\[[^\]]*{re.escape(branch_value)}"
+    return not re.search(pattern, js_source)
+
+
+def pr_missing_branch_validation(js_source):
+    return has_function(js_source, "validateBaseBranchSelection") and "not found on GitHub" in js_source
+
+
+def pr_creation_blocked_when_branch_missing(js_source):
+    pattern = r"prForm[\s\S]*addEventListener\([\s\S]*submit[\s\S]*validateBaseBranchSelection"
+    return bool(re.search(pattern, js_source))
+
+
 @given("my project repository is hosted on GitHub")
 def step_project_hosted_on_github(context):
     context.github_state = {}
@@ -219,7 +241,6 @@ def step_attempt_create_pr(context):
     create_button = find_button_by_id(buttons, "activity-pr")
     assert create_button, "Create PR button missing"
     assert has_button_handler(js_source, "activity-pr", "openPullRequestModal"), "Create PR button is not wired"
-    assert pr_modal_surfaces_github_cli_instructions(js_source), "Missing GitHub CLI instructions not surfaced"
 
 
 @then("I see instructions to install and authenticate the GitHub CLI")
@@ -228,9 +249,27 @@ def step_github_cli_instructions(context):
     assert has_id(html, "github-cli-instructions"), "GitHub CLI instructions element missing"
     js_source = context.github_state["js"]
     assert github_cli_instructions_available(js_source), "GitHub CLI instructions are not visible"
+    assert pr_modal_surfaces_github_cli_instructions(js_source), "Missing GitHub CLI instructions not surfaced"
 
 
 @then("the PR is not created")
 def step_pr_not_created(context):
     js_source = context.github_state["js"]
     assert pr_creation_blocked_without_github_cli(js_source), "PR creation guard missing when GitHub CLI is unavailable"
+
+
+@given("I selected a base branch that does not exist on GitHub")
+def step_missing_base_branch(context):
+    html = context.github_state["html"]
+    js_source = context.github_state["js"]
+    assert pr_base_branch_missing_option(html, "staging"), "Missing base branch option not available"
+    assert missing_branch_not_in_remote_list(js_source, "staging"), "Missing branch must not be in remote list"
+
+
+@then("I see an error indicating the target branch is missing")
+def step_missing_base_branch_error(context):
+    html = context.github_state["html"]
+    js_source = context.github_state["js"]
+    assert pr_base_branch_error_visible(html), "Missing base branch error element missing"
+    assert pr_missing_branch_validation(js_source), "Missing base branch validation messaging not wired"
+    assert pr_creation_blocked_when_branch_missing(js_source), "PR creation not blocked on missing base branch"
