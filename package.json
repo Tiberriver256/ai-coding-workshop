@@ -1,0 +1,14 @@
+{
+  "name": "ai-coding-workshop",
+  "private": true,
+  "bin": {
+    "task-board": "bin/task-board.js"
+  },
+  "scripts": {
+    "test:acceptance": "playwright test",
+    "test:cli": "node --test tests/cli/cli-smoke.test.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.57.0"
+  }
+}

@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.MobileReview" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="colorPrimary">#0B1D2A</item>
+        <item name="colorPrimaryDark">#0B1D2A</item>
+        <item name="colorAccent">#E63946</item>
+    </style>
+</resources>

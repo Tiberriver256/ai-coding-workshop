@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>QR Connect · Sprint Review</title>
+    <link rel="stylesheet" href="demo.css" />
+  </head>
+  <body>
+    <section class="qr-layout" aria-label="QR pairing">
+      <div class="qr-card">
+        <span class="tag">Device pairing</span>
+        <h2>Scan to connect your mobile app</h2>
+        <p>
+          This code links the Codex CLI session to your phone for real-time task review and
+          approvals.
+        </p>
+        <div class="qr-actions">
+          <span class="badge">Waiting for scan</span>
+          <span class="badge">Secure channel</span>
+        </div>
+      </div>
+      <div class="qr-panel">
+        <div class="qr-label">Pairing QR</div>
+        <svg width="220" height="220" viewBox="0 0 220 220" role="img" aria-label="QR code">
+          <rect width="220" height="220" rx="28" fill="#fff" />
+          <rect x="18" y="18" width="64" height="64" fill="#111" />
+          <rect x="28" y="28" width="44" height="44" fill="#fff" />
+          <rect x="38" y="38" width="24" height="24" fill="#111" />
+          <rect x="138" y="18" width="64" height="64" fill="#111" />
+          <rect x="148" y="28" width="44" height="44" fill="#fff" />
+          <rect x="158" y="38" width="24" height="24" fill="#111" />
+          <rect x="18" y="138" width="64" height="64" fill="#111" />
+          <rect x="28" y="148" width="44" height="44" fill="#fff" />
+          <rect x="38" y="158" width="24" height="24" fill="#111" />
+          <rect x="108" y="108" width="18" height="18" fill="#111" />
+          <rect x="132" y="96" width="12" height="12" fill="#111" />
+          <rect x="96" y="140" width="12" height="12" fill="#111" />
+          <rect x="120" y="150" width="18" height="18" fill="#111" />
+          <rect x="144" y="124" width="12" height="12" fill="#111" />
+          <rect x="98" y="96" width="12" height="12" fill="#111" />
+          <rect x="70" y="110" width="12" height="12" fill="#111" />
+          <rect x="84" y="128" width="12" height="12" fill="#111" />
+          <rect x="70" y="150" width="12" height="12" fill="#111" />
+        </svg>
+        <div class="fallback-link">codex://pair/9f2e4a-11jan26</div>
+      </div>
+    </section>
+  </body>
+</html>

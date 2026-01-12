@@ -19,3 +19,9 @@ Feature: Azure DevOps support for pull requests
     When I attempt to create a PR
     Then I see instructions to install and authenticate the Azure CLI
     And the Azure DevOps PR is not created
+
+  Scenario: Repository is not an Azure Repos project
+    Given my project is not hosted on Azure Repos
+    When I attempt to create a PR with Azure DevOps
+    Then I see a message that the repository is unsupported
+    And the Azure DevOps PR is not created
