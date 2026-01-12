@@ -16,3 +16,10 @@ Feature: Code review diff view
     When I click the comment icon next to a line
     And I enter a comment
     Then the comment is added to my review
+
+  Scenario: Submit review feedback
+    Given I have added one or more review comments
+    When I click Send
+    Then all comments are sent together to the agent
+    And the task returns to In Progress
+    And review evidence is recorded

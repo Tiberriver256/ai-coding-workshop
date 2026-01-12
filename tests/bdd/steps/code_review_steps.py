@@ -36,6 +36,11 @@ def function_body_contains(js_source, function_name, fragment):
     return fragment in body
 
 
+def function_body_contains_all(js_source, function_name, fragments):
+    body = extract_function_body(js_source, function_name)
+    return all(fragment in body for fragment in fragments)
+
+
 def has_button_handler(js_source, button_id, function_name):
     pattern = rf"{re.escape(button_id)}[\s\S]*?addEventListener\(\s*['\"]click['\"][\s\S]*?{re.escape(function_name)}"
     return bool(re.search(pattern, js_source))
@@ -149,3 +154,52 @@ def step_comment_added_to_review(context):
     assert has_id(html, "review-comment-list"), "Review comment list container missing"
     assert has_function(js_source, "addLineComment"), "Line comment add logic missing"
     assert has_function(js_source, "renderReviewComments"), "Review comment renderer missing"
+
+
+@given("I have added one or more review comments")
+def step_review_comments_added(context):
+    html = load_html()
+    js_source = load_js()
+    assert has_id(html, "review-comment-list"), "Review comment list container missing"
+    assert has_function(js_source, "addLineComment"), "Line comment add logic missing"
+    assert function_body_contains(js_source, "addLineComment", "reviewComments"), "Line comment does not update review comments"
+    context.review_state = {"html": html, "js": js_source}
+
+
+@when("I click Send")
+def step_click_send_review(context):
+    html = context.review_state["html"]
+    js_source = context.review_state["js"]
+    assert has_id(html, "review-send"), "Send review button missing"
+    assert has_function(js_source, "sendReviewFeedback"), "Send review handler missing"
+    assert has_button_handler(js_source, "review-send", "sendReviewFeedback"), "Send review action not wired"
+
+
+@then("all comments are sent together to the agent")
+def step_comments_sent_together(context):
+    js_source = context.review_state["js"]
+    assert function_body_contains_all(
+        js_source,
+        "sendReviewFeedback",
+        ("getReviewComments", "reviewFeedback"),
+    ), "Send feedback does not bundle review comments"
+
+
+@then("the task returns to In Progress")
+def step_task_returns_to_in_progress(context):
+    js_source = context.review_state["js"]
+    assert function_body_contains(
+        js_source,
+        "sendReviewFeedback",
+        "in_progress",
+    ), "Send feedback does not move task to In Progress"
+
+
+@then("review evidence is recorded")
+def step_review_evidence_recorded(context):
+    js_source = context.review_state["js"]
+    assert function_body_contains_all(
+        js_source,
+        "sendReviewFeedback",
+        ("recordEvidence", "review_feedback_sent"),
+    ), "Send feedback does not record review evidence"

@@ -125,6 +125,9 @@
 .review-comment-meta { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .review-comment-text { margin: 0; font-size: 0.9rem; }
 .review-comment-empty { color: var(--muted); font-size: 0.85rem; }
+.review-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.review-send-hint { margin: 0; font-size: 0.8rem; color: var(--muted); max-width: 360px; }
+.review-send-hint[data-state="ready"] { color: #5a4c32; }
 .task-action-review { border-color: rgba(240, 165, 0, 0.45); background: #fff3da; }
 .field {
   display: grid;
