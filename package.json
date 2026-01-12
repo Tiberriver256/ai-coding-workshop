@@ -5,6 +5,7 @@
     "task-board": "bin/task-board.js"
   },
   "scripts": {
+    "check:bdd-drift": "scripts/check-bdd-drift.sh",
     "test:acceptance": "playwright test",
     "test:cli": "node --test tests/cli/cli-smoke.test.js"
   },

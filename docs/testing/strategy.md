@@ -25,6 +25,7 @@
 ## Behave Automation
 - Source of truth: `docs/features/` defines behavior; `tests/bdd/` mirrors those features for automation.
 - Drift control: if a `tests/bdd/*.feature` diverges from `docs/features/*.feature`, fix or document the exception in acceptance evidence.
+- Drift check: run `scripts/check-bdd-drift.sh` (or `npm run check:bdd-drift`) before BDD runs to enforce alignment.
 - Coverage rule: new `docs/features/*.feature` files are either automated or explicitly deferred with rationale.
 - Structure: features stay aligned by name; steps live in `tests/bdd/steps/`; shared helpers go in `tests/bdd/steps/support/` (planned).
 - Repo hygiene: generated artifacts (for example `__pycache__`) must not be committed; add ignores/lints as needed.

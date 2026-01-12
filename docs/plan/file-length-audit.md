@@ -4,13 +4,30 @@
 - Criterion: text files over 450 lines (hard limit is 500 lines).
 - Method: line count scan of text files in repo (binary files ignored).
 
-## Findings
+## Findings (2026-01-11)
 Two files exceed the 500-line hard limit.
 
 | File | Line Count | Status |
 | --- | --- | --- |
 | `utilities/delegate.sh` | 763 | ❌ Over 500 lines |
 | `utilities/delegate.how-to.md` | 542 | ❌ Over 500 lines |
+
+## Refresh (2026-01-12)
+Re-scan of tracked text files shows the prior violations have been split and now comply.
+The current over/near-limit list is below.
+
+| File | Line Count | Status |
+| --- | --- | --- |
+| `package-lock.json` | 1313 | ❌ Over 500 lines (generated lockfile) |
+| `app/app.part2.js` | 499 | ⚠️ Near limit |
+| `app/app.part1.js` | 491 | ⚠️ Near limit |
+| `app/mobile/app.js` | 463 | ⚠️ Near limit |
+| `app/styles.part2.css` | 461 | ⚠️ Near limit |
+| `tests/bdd/steps/task_orchestration_steps.py` | 459 | ⚠️ Near limit |
+
+Notes:
+- `utilities/delegate.sh` and `utilities/delegate.how-to.md` are now below 500 lines after the split.
+- `package-lock.json` needs an explicit policy decision (exempt generated lockfiles or change tooling).
 
 ## Proposed Splits
 
