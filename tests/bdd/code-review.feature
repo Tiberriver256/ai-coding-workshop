@@ -1,7 +1,7 @@
-Feature: Code review diff view
+Feature: Review code changes produced by agents
   As a user
-  I want to inspect file changes in a diff view
-  So that I can review agent work before merging
+  I want to review diffs and send feedback
+  So that I can guide the agent before merging
 
   Background:
     Given a task is in the In Review column

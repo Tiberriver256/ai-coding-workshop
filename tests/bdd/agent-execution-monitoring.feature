@@ -1,7 +1,7 @@
-Feature: Agent execution monitoring
+Feature: Monitor and control agent execution
   As a user
-  I want to view live execution logs
-  So that I can monitor agent progress
+  I want to see live agent activity and control execution
+  So that I can intervene when needed
 
   Background:
     Given a task attempt is running

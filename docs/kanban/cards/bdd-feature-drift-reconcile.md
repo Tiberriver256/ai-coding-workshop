@@ -16,7 +16,7 @@ BDD specs and automated tests must match to keep acceptance evidence trustworthy
 Delegate: QA lead + feature owners.
 
 ## Status
-To Do
+Done
 
 ## Links
 - Evidence: `scripts/check-bdd-drift.sh`, `docs/features/`, `tests/bdd/`
@@ -24,3 +24,5 @@ To Do
 ## Notes
 - Use `docs/features/` as the source of truth unless explicitly documented.
 - Keep refactors strictly within feature files (no step changes unless required).
+- Synced drifted features by copying `docs/features/*` into `tests/bdd/*`.
+- Added missing `tests/bdd/encrypted-point-to-point-connectivity.feature` mirror.

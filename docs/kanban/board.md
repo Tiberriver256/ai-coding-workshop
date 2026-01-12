@@ -9,8 +9,6 @@ WIP limit: 5 active delegates. Update cards with evidence links.
 - `docs/kanban/cards/kanban-board-evidence-sync.md`
 - `docs/kanban/cards/slice-dependency-parallel-tags.md`
 - `docs/kanban/cards/slice-evidence-line.md`
-- `docs/kanban/cards/bdd-feature-drift-reconcile.md`
-- `docs/kanban/cards/file-length-policy-lockfiles.md`
 - `docs/kanban/cards/near-limit-file-splits.md`
 - `docs/kanban/cards/retro-2026-01-11c.md`
 - `docs/kanban/cards/retro-2026-01-11c-meadows.md`
@@ -36,6 +34,8 @@ WIP limit: 5 active delegates. Update cards with evidence links.
 - (empty)
 
 ## Done
+- `docs/kanban/cards/file-length-policy-lockfiles.md` — Done: locked the 500-line rule by removing npm lockfiles, adding `.npmrc`, and documenting the policy.
+- `docs/kanban/cards/bdd-feature-drift-reconcile.md` — Done: synced BDD feature mirrors to docs/features and added encrypted connectivity mirror.
 - `docs/kanban/cards/retro-2026-01-12-merge.md` — Done: merged Meadows + Dorigo retros into a single retro with actions.
 - `docs/kanban/cards/tech-debt-sprint-2026-01-12.md` — Done: captured tech-debt list, shipped quick wins, and carded top follow-ups.
 - `docs/kanban/cards/ci-fix.md` — Done: restored task count UI, gated demo seeding, refreshed persisted tasks, and updated acceptance selectors.
