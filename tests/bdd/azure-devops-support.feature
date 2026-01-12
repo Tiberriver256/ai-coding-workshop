@@ -12,3 +12,10 @@ Feature: Azure DevOps support for pull requests
     When I click "Create PR"
     Then a pull request is created on Azure DevOps
     And the task shows the PR status
+
+  Scenario: Azure CLI not configured
+    Given a task attempt has changes
+    And the Azure CLI is not installed or authenticated
+    When I attempt to create a PR
+    Then I see instructions to install and authenticate the Azure CLI
+    And the Azure DevOps PR is not created

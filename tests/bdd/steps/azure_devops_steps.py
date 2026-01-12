@@ -61,6 +61,7 @@ def azure_cli_instructions_available(js_source):
         has_function(js_source, "setAzureCliInstructions")
         and "Install Azure CLI" in js_source
         and "az extension add" in js_source
+        and "az login" in js_source
     )
 
 
@@ -76,6 +77,13 @@ def pr_creation_records_azure(js_source):
     if not body:
         return False
     return "provider" in body and "azure" in body and "recordEvidence" in body
+
+
+def pr_creation_blocked_without_azure_cli(js_source):
+    body = extract_function_body(js_source, "createPullRequest")
+    if not body:
+        return False
+    return "isAzureCliReady" in body and "return null" in body
 
 
 @given("my project repository is hosted on Azure Repos")
@@ -101,6 +109,15 @@ def step_azure_cli_installed(context):
     assert pr_modal_surfaces_azure_cli_instructions(js_source), "Azure CLI readiness not used in PR modal"
 
 
+@given("the Azure CLI is not installed or authenticated")
+def step_azure_cli_missing(context):
+    js_source = context.azure_state["js"]
+    assert azure_cli_instructions_available(js_source), "Azure CLI instructions are not wired"
+    context.azure_state["installed"] = False
+    context.azure_state["authenticated"] = False
+    context.azure_state["devopsExtension"] = False
+
+
 @then("a pull request is created on Azure DevOps")
 def step_pr_created(context):
     js_source = context.azure_state["js"]
@@ -108,3 +125,18 @@ def step_pr_created(context):
     assert function_body_contains(js_source, "createPullRequest", "task.pullRequest"), "PR payload not saved on task"
     assert function_body_contains(js_source, "createPullRequest", "status"), "PR status not set"
     assert pr_creation_records_azure(js_source), "Azure PR creation details missing"
+
+
+@then("I see instructions to install and authenticate the Azure CLI")
+def step_azure_cli_instructions(context):
+    html = context.azure_state["html"]
+    assert has_id(html, "azure-cli-instructions"), "Azure CLI instructions element missing"
+    js_source = context.azure_state["js"]
+    assert azure_cli_instructions_available(js_source), "Azure CLI instructions are not visible"
+    assert pr_modal_surfaces_azure_cli_instructions(js_source), "Missing Azure CLI instructions not surfaced"
+
+
+@then("the Azure DevOps PR is not created")
+def step_azure_pr_not_created(context):
+    js_source = context.azure_state["js"]
+    assert pr_creation_blocked_without_azure_cli(js_source), "PR creation guard missing when Azure CLI is unavailable"
