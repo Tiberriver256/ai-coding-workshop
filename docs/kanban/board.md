@@ -77,6 +77,8 @@ WIP limit: 5 active delegates. Update cards with evidence links.
 - `docs/kanban/cards/audit-acceptance-evidence.md`
 - `docs/kanban/cards/audit-file-length.md`
 - `docs/kanban/cards/blind-user-test-0001.md`
+- `docs/kanban/cards/blind-user-test-2026-01-12.md` - Done: captured blind session notes with issues, pain points, and suggestions.
+- `docs/kanban/cards/ux-review-2026-01-12.md` — Done: captured UX review notes for web/mobile flows with issues and recommendations.
 - `docs/kanban/cards/ci-pipeline-minimal.md`
 - `docs/kanban/cards/ci-sanity-check.md`
 - `docs/kanban/cards/docs-index-refresh.md`
@@ -87,6 +89,7 @@ WIP limit: 5 active delegates. Update cards with evidence links.
 - `docs/kanban/cards/onboarding-setup-docs.md`
 - `docs/kanban/cards/ops-runbook-monitoring.md`
 - `docs/kanban/cards/quality-attributes-evidence.md`
+- `docs/kanban/cards/retro-2026-01-12-dorigo.md` — Done: captured stigmergy retro findings and actions for slice coordination signals.
 - `docs/kanban/cards/retro-2026-01-11-dorigo.md`
 - `docs/kanban/cards/retro-2026-01-11-meadows.md`
 - `docs/kanban/cards/retro-2026-01-11-merge.md`
@@ -95,6 +98,7 @@ WIP limit: 5 active delegates. Update cards with evidence links.
 - `docs/kanban/cards/retro-2026-01-11b-meadows.md`
 - `docs/kanban/cards/retro-2026-01-11b-dorigo.md`
 - `docs/kanban/cards/retro-2026-01-11b-merge.md`
+- `docs/kanban/cards/retro-2026-01-12-meadows.md` — Done: captured Slice 0001 Meadows retro with leverage points and actions.
 - `docs/kanban/cards/security-threat-model.md`
 - `docs/kanban/cards/slice-0001-acceptance-run.md`
 - `docs/kanban/cards/slice-0001-architecture-spike.md`
