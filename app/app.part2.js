@@ -1,3 +1,103 @@
+const taskViewSection = document.getElementById('task-view');
+const openTaskViewButton = document.getElementById('open-task-view');
+const pauseTaskStreamButton = document.getElementById('pause-task-stream');
+const taskLogStream = document.getElementById('task-log-stream');
+const taskViewStatus = document.getElementById('task-view-status');
+const taskViewAttemptLabel = document.getElementById('task-view-attempt');
+const taskViewAgent = typeof defaultAgentConfig === 'object'
+  ? { ...defaultAgentConfig }
+  : { provider: 'OpenAI', model: 'gpt-4.1-mini', temperature: 0.2 };
+const taskViewAttempt = {
+  id: 'attempt_log_stream_demo',
+  status: 'running',
+  agent: taskViewAgent,
+  startedAt: new Date().toISOString(),
+  taskTitle: 'View real-time execution logs',
+};
+const taskViewLogEntries = [
+  { id: 'log_1', timestamp: new Date(Date.now() - 120000).toISOString(), kind: 'action', source: 'agent', message: 'Scanning monitoring feature requirements.' },
+  { id: 'log_2', timestamp: new Date(Date.now() - 90000).toISOString(), kind: 'response', source: 'agent', message: 'Summarized the scenario and prepared UI changes.' },
+  { id: 'log_3', timestamp: new Date(Date.now() - 60000).toISOString(), kind: 'action', source: 'agent', message: 'Rendering task view log stream panel.' },
+  { id: 'log_4', timestamp: new Date(Date.now() - 30000).toISOString(), kind: 'response', source: 'agent', message: 'Streaming logs now show actions and responses.' },
+  { id: 'log_5', timestamp: new Date(Date.now() - 15000).toISOString(), kind: 'system', source: 'system', message: 'Waiting for the next agent event.' },
+];
+let taskLogStreamTimer = null;
+let taskLogStreamIndex = 0;
+
+function renderTaskViewMeta() {
+  if (!taskViewAttemptLabel) { return; }
+  const agent = taskViewAttempt?.agent || {};
+  const agentLabel = [agent.provider, agent.model].filter(Boolean).join(' ');
+  const statusLabel = taskViewAttempt?.status ? taskViewAttempt.status.replace('_', ' ') : 'running';
+  taskViewAttemptLabel.textContent = agentLabel ? `${statusLabel} · ${agentLabel}` : statusLabel;
+}
+function setTaskViewStatus(message) {
+  if (!taskViewStatus) { return; }
+  const text = message ? message.trim() : 'Idle';
+  taskViewStatus.textContent = text || 'Idle';
+}
+function renderTaskLogEntry(entry) {
+  const item = document.createElement('div');
+  item.className = 'task-log-entry';
+  item.dataset.kind = entry?.kind || 'system';
+  const meta = document.createElement('div');
+  meta.className = 'task-log-meta';
+  const badge = document.createElement('span');
+  badge.className = 'task-log-badge';
+  badge.textContent = entry?.kind || 'system';
+  const source = document.createElement('span');
+  source.className = 'task-log-source';
+  source.textContent = entry?.source || 'system';
+  const time = document.createElement('span');
+  time.className = 'task-log-time';
+  time.textContent = formatTimestamp(entry?.timestamp || new Date().toISOString());
+  meta.append(badge, source, time);
+  const message = document.createElement('p');
+  message.className = 'task-log-message';
+  message.textContent = entry?.message || 'Awaiting updates...';
+  item.append(meta, message);
+  return item;
+}
+function appendTaskLogEntry(entry) {
+  if (!taskLogStream) { return; }
+  const item = renderTaskLogEntry(entry);
+  taskLogStream.appendChild(item);
+  taskLogStream.scrollTop = taskLogStream.scrollHeight;
+}
+function stopTaskLogStream(message) {
+  if (taskLogStreamTimer) {
+    clearInterval(taskLogStreamTimer);
+    taskLogStreamTimer = null;
+  }
+  setTaskViewStatus(message || 'Paused');
+}
+function startTaskLogStream() {
+  if (!taskLogStream) { return; }
+  taskLogStream.innerHTML = '';
+  taskLogStreamIndex = 0;
+  setTaskViewStatus('Streaming');
+  taskLogStreamTimer = setInterval(() => {
+    if (taskLogStreamIndex >= taskViewLogEntries.length) {
+      stopTaskLogStream('Awaiting new events');
+      return;
+    }
+    appendTaskLogEntry(taskViewLogEntries[taskLogStreamIndex]);
+    taskLogStreamIndex += 1;
+  }, 1200);
+  if (taskViewLogEntries.length > 0) {
+    appendTaskLogEntry(taskViewLogEntries[0]);
+    taskLogStreamIndex = 1;
+  }
+}
+function openTaskView() {
+  if (taskViewSection) { taskViewSection.setAttribute('data-state', 'open'); }
+  renderTaskViewMeta();
+  startTaskLogStream();
+}
+function pauseTaskLogStream() {
+  stopTaskLogStream('Paused');
+}
+
 function openReviewModal(taskId, view) {
   if (!reviewModal) { return; }
   const task = findTaskById(taskId);
@@ -127,10 +227,12 @@ if (assistantProviderSelect) { assistantProviderSelect.addEventListener('change'
 if (assistantSuggestButton) { assistantSuggestButton.addEventListener('click', () => { requestAssistantSuggestions(); }); }
 if (assistantSuggestions) { assistantSuggestions.addEventListener('click', (event) => { const button = event.target.closest('button[data-suggestion]'); if (!button) { return; } insertSuggestion(button.dataset.suggestion); }); }
 if (reviewSummaryTab) { reviewSummaryTab.addEventListener('click', () => setReviewView('summary')); } if (reviewDiffTab) { reviewDiffTab.addEventListener('click', () => setReviewView('diff')); } if (diffInlineButton) { diffInlineButton.addEventListener('click', () => setDiffViewMode('inline')); } if (diffSplitButton) { diffSplitButton.addEventListener('click', () => setDiffViewMode('split')); } if (diffFileList) { diffFileList.addEventListener('click', handleDiffFileListClick); } if (reviewSendButton) { reviewSendButton.addEventListener('click', sendReviewFeedback); }
+if (openTaskViewButton) { openTaskViewButton.addEventListener('click', openTaskView); }
+if (pauseTaskStreamButton) { pauseTaskStreamButton.addEventListener('click', pauseTaskLogStream); }
 if (activityStartButton) { activityStartButton.addEventListener('click', () => startTaskAttempt(activityTaskId)); } if (activityCompleteButton) { activityCompleteButton.addEventListener('click', () => completeTaskAttempt(activityTaskId)); } if (activityMergeButton) { activityMergeButton.addEventListener('click', () => mergeTask(activityTaskId)); }
 if (activityPrButton) { activityPrButton.addEventListener('click', () => openPullRequestModal(activityTaskId)); } if (prBaseBranchSelect) { prBaseBranchSelect.addEventListener('change', (event) => { validateBaseBranchSelection(event.target.value); }); }
 if (copilotToggle) { copilotToggle.addEventListener('change', (event) => { setCopilotEnabled(event.target.checked); }); }
-registerColumnDropTargets(); setAssistantEnabled(Boolean(assistantToggle?.checked)); setAssistantProvider(assistantProvider); updateCopilotStatusUI(); updateAssistantProviderAvailability();
+registerColumnDropTargets(); setAssistantEnabled(Boolean(assistantToggle?.checked)); setAssistantProvider(assistantProvider); updateCopilotStatusUI(); updateAssistantProviderAvailability(); renderTaskViewMeta(); setTaskViewStatus('Idle');
 form.addEventListener('submit', (event) => {
   event.preventDefault();
   if (!validateForm()) {

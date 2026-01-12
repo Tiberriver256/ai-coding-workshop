@@ -27,6 +27,7 @@ WIP limit: 5 active delegates. Update cards with evidence links.
 - (empty)
 
 ## Done
+- `docs/kanban/cards/feature-agent-monitoring-logs.md` — Done: added task view log stream UI, BDD steps, and acceptance evidence.
 - `docs/kanban/cards/feature-codex-cli-auth-prompt.md`
 - `docs/kanban/cards/feature-codex-cli-authenticated.md`
 - `docs/kanban/cards/feature-codex-cli-missing.md`

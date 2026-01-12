@@ -42,6 +42,36 @@
         <div class="activity-log" id="activity-log" role="list"></div>
       </section>
 
+      <section class="task-view-panel" id="task-view" data-state="closed" aria-labelledby="task-view-title">
+        <div class="task-view-header">
+          <div>
+            <p class="eyebrow">Task View</p>
+            <h2 id="task-view-title">Execution log stream</h2>
+            <p class="subtitle">Watch live agent actions and responses as they arrive.</p>
+          </div>
+          <div class="task-view-actions">
+            <button class="ghost" id="open-task-view" type="button">Open task view</button>
+            <button class="secondary" id="pause-task-stream" type="button">Pause stream</button>
+          </div>
+        </div>
+        <div class="task-view-meta">
+          <div class="task-view-meta-left">
+            <span class="task-view-label">Attempt</span>
+            <span id="task-view-attempt">No attempt selected</span>
+          </div>
+          <span class="task-view-status" id="task-view-status" role="status">Idle</span>
+        </div>
+        <div
+          class="task-log-stream"
+          id="task-log-stream"
+          role="log"
+          aria-live="polite"
+          aria-relevant="additions"
+        >
+          <div class="empty">Open the task view to stream live logs.</div>
+        </div>
+      </section>
+
       <section class="devices-panel" id="devices-panel" aria-labelledby="devices-title">
         <div class="devices-header">
           <div>
