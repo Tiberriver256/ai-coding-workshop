@@ -4,6 +4,13 @@ const pauseTaskStreamButton = document.getElementById('pause-task-stream');
 const taskLogStream = document.getElementById('task-log-stream');
 const taskViewStatus = document.getElementById('task-view-status');
 const taskViewAttemptLabel = document.getElementById('task-view-attempt');
+const openProcessesButton = document.getElementById('open-processes');
+const processPanel = document.getElementById('process-panel');
+const processPanelStatus = document.getElementById('process-panel-status');
+const processList = document.getElementById('process-list');
+const processLogViewer = document.getElementById('process-log-viewer');
+const processLogEntries = document.getElementById('process-log-entries');
+const processLogTitle = document.getElementById('process-log-title');
 const taskViewAgent = typeof defaultAgentConfig === 'object'
   ? { ...defaultAgentConfig }
   : { provider: 'OpenAI', model: 'gpt-4.1-mini', temperature: 0.2 };
@@ -21,8 +28,28 @@ const taskViewLogEntries = [
   { id: 'log_4', timestamp: new Date(Date.now() - 30000).toISOString(), kind: 'response', source: 'agent', message: 'Streaming logs now show actions and responses.' },
   { id: 'log_5', timestamp: new Date(Date.now() - 15000).toISOString(), kind: 'system', source: 'system', message: 'Waiting for the next agent event.' },
 ];
+const taskViewProcesses = [
+  { id: 'process_boot', name: 'Initialize agent runtime', status: 'running', startedAt: new Date(Date.now() - 180000).toISOString(), updatedAt: new Date(Date.now() - 60000).toISOString() },
+  { id: 'process_sync', name: 'Sync workspace changes', status: 'completed', startedAt: new Date(Date.now() - 150000).toISOString(), updatedAt: new Date(Date.now() - 90000).toISOString() },
+  { id: 'process_render', name: 'Render monitoring UI', status: 'queued', startedAt: new Date(Date.now() - 60000).toISOString(), updatedAt: new Date(Date.now() - 45000).toISOString() },
+];
+const taskProcessLogEntries = {
+  process_boot: [
+    { id: 'process_boot_1', timestamp: new Date(Date.now() - 170000).toISOString(), level: 'info', message: 'Loaded agent configuration and tools.' },
+    { id: 'process_boot_2', timestamp: new Date(Date.now() - 130000).toISOString(), level: 'info', message: 'Connected to local workspace.' },
+  ],
+  process_sync: [
+    { id: 'process_sync_1', timestamp: new Date(Date.now() - 140000).toISOString(), level: 'info', message: 'Fetched latest task changes.' },
+    { id: 'process_sync_2', timestamp: new Date(Date.now() - 100000).toISOString(), level: 'success', message: 'Workspace synced successfully.' },
+  ],
+  process_render: [
+    { id: 'process_render_1', timestamp: new Date(Date.now() - 50000).toISOString(), level: 'info', message: 'Preparing task view updates.' },
+    { id: 'process_render_2', timestamp: new Date(Date.now() - 35000).toISOString(), level: 'info', message: 'Waiting for next render cycle.' },
+  ],
+};
 let taskLogStreamTimer = null;
 let taskLogStreamIndex = 0;
+let activeProcessId = null;
 
 function renderTaskViewMeta() {
   if (!taskViewAttemptLabel) { return; }
@@ -96,6 +123,108 @@ function openTaskView() {
 }
 function pauseTaskLogStream() {
   stopTaskLogStream('Paused');
+}
+
+function setProcessPanelStatus(message) {
+  if (!processPanelStatus) { return; }
+  const text = message ? message.trim() : 'Hidden';
+  processPanelStatus.textContent = text || 'Hidden';
+}
+function renderProcessListItem(process) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'process-item';
+  button.dataset.processId = process?.id || '';
+  button.dataset.state = process?.id === activeProcessId ? 'active' : 'idle';
+  const title = document.createElement('div');
+  title.className = 'process-item-title';
+  title.textContent = process?.name || 'Unnamed process';
+  const meta = document.createElement('div');
+  meta.className = 'process-item-meta';
+  const status = document.createElement('span');
+  status.className = 'process-item-status';
+  status.dataset.status = process?.status || 'queued';
+  status.textContent = process?.status || 'queued';
+  const time = document.createElement('span');
+  const timestamp = process?.updatedAt || process?.startedAt;
+  time.textContent = timestamp ? formatTimestamp(timestamp) : 'Just now';
+  meta.append(status, time);
+  button.append(title, meta);
+  return button;
+}
+function renderProcessList() {
+  if (!processList) { return; }
+  processList.innerHTML = '';
+  if (!Array.isArray(taskViewProcesses) || taskViewProcesses.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = 'No processes available.';
+    processList.appendChild(empty);
+    return;
+  }
+  taskViewProcesses.forEach((process) => {
+    processList.appendChild(renderProcessListItem(process));
+  });
+}
+function renderProcessLogEntry(entry) {
+  const item = document.createElement('div');
+  item.className = 'process-log-entry';
+  const meta = document.createElement('div');
+  meta.className = 'process-log-meta';
+  const level = document.createElement('span');
+  level.textContent = entry?.level || 'info';
+  const time = document.createElement('span');
+  time.textContent = formatTimestamp(entry?.timestamp || new Date().toISOString());
+  meta.append(level, time);
+  const message = document.createElement('p');
+  message.className = 'process-log-message';
+  message.textContent = entry?.message || 'Awaiting process updates...';
+  item.append(meta, message);
+  return item;
+}
+function renderProcessLogs(processId) {
+  if (!processLogEntries) { return; }
+  processLogEntries.innerHTML = '';
+  const entries = taskProcessLogEntries?.[processId] || [];
+  if (!entries.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = 'No logs available for this process.';
+    processLogEntries.appendChild(empty);
+    return;
+  }
+  entries.forEach((entry) => {
+    processLogEntries.appendChild(renderProcessLogEntry(entry));
+  });
+}
+function openProcessLogView(processId) {
+  if (!processId) {
+    renderProcessList();
+    renderProcessLogs(null);
+    return;
+  }
+  activeProcessId = processId;
+  const process = taskViewProcesses.find((candidate) => candidate.id === processId);
+  if (processLogTitle) { processLogTitle.textContent = process?.name || 'Process logs'; }
+  renderProcessList();
+  renderProcessLogs(processId);
+}
+function handleProcessListClick(event) {
+  const button = event.target.closest('button[data-process-id]');
+  if (!button) { return; }
+  openProcessLogView(button.dataset.processId);
+}
+function openProcessPanel() {
+  if (processPanel) { processPanel.setAttribute('data-state', 'open'); }
+  const hasProcesses = Array.isArray(taskViewProcesses) && taskViewProcesses.length > 0;
+  setProcessPanelStatus(hasProcesses ? 'Visible' : 'Empty');
+  if (hasProcesses) {
+    const initialId = activeProcessId || taskViewProcesses[0].id;
+    openProcessLogView(initialId);
+    return;
+  }
+  renderProcessList();
+  renderProcessLogs(null);
 }
 
 function openReviewModal(taskId, view) {
@@ -229,10 +358,12 @@ if (assistantSuggestions) { assistantSuggestions.addEventListener('click', (even
 if (reviewSummaryTab) { reviewSummaryTab.addEventListener('click', () => setReviewView('summary')); } if (reviewDiffTab) { reviewDiffTab.addEventListener('click', () => setReviewView('diff')); } if (diffInlineButton) { diffInlineButton.addEventListener('click', () => setDiffViewMode('inline')); } if (diffSplitButton) { diffSplitButton.addEventListener('click', () => setDiffViewMode('split')); } if (diffFileList) { diffFileList.addEventListener('click', handleDiffFileListClick); } if (reviewSendButton) { reviewSendButton.addEventListener('click', sendReviewFeedback); }
 if (openTaskViewButton) { openTaskViewButton.addEventListener('click', openTaskView); }
 if (pauseTaskStreamButton) { pauseTaskStreamButton.addEventListener('click', pauseTaskLogStream); }
+if (openProcessesButton) { openProcessesButton.addEventListener('click', openProcessPanel); }
+if (processList) { processList.addEventListener('click', handleProcessListClick); }
 if (activityStartButton) { activityStartButton.addEventListener('click', () => startTaskAttempt(activityTaskId)); } if (activityCompleteButton) { activityCompleteButton.addEventListener('click', () => completeTaskAttempt(activityTaskId)); } if (activityMergeButton) { activityMergeButton.addEventListener('click', () => mergeTask(activityTaskId)); }
 if (activityPrButton) { activityPrButton.addEventListener('click', () => openPullRequestModal(activityTaskId)); } if (prBaseBranchSelect) { prBaseBranchSelect.addEventListener('change', (event) => { validateBaseBranchSelection(event.target.value); }); }
 if (copilotToggle) { copilotToggle.addEventListener('change', (event) => { setCopilotEnabled(event.target.checked); }); }
-registerColumnDropTargets(); setAssistantEnabled(Boolean(assistantToggle?.checked)); setAssistantProvider(assistantProvider); updateCopilotStatusUI(); updateAssistantProviderAvailability(); renderTaskViewMeta(); setTaskViewStatus('Idle');
+registerColumnDropTargets(); setAssistantEnabled(Boolean(assistantToggle?.checked)); setAssistantProvider(assistantProvider); updateCopilotStatusUI(); updateAssistantProviderAvailability(); renderTaskViewMeta(); setTaskViewStatus('Idle'); setProcessPanelStatus('Hidden');
 form.addEventListener('submit', (event) => {
   event.preventDefault();
   if (!validateForm()) {

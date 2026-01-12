@@ -52,6 +52,7 @@
           <div class="task-view-actions">
             <button class="ghost" id="open-task-view" type="button">Open task view</button>
             <button class="secondary" id="pause-task-stream" type="button">Pause stream</button>
+            <button class="ghost" id="open-processes" type="button">View Processes</button>
           </div>
         </div>
         <div class="task-view-meta">
@@ -69,6 +70,37 @@
           aria-relevant="additions"
         >
           <div class="empty">Open the task view to stream live logs.</div>
+        </div>
+
+        <div class="task-process-panel" id="process-panel" data-state="closed" aria-labelledby="process-panel-title">
+          <div class="task-process-header">
+            <div>
+              <p class="eyebrow">Processes</p>
+              <h3 id="process-panel-title">Attempt processes</h3>
+              <p class="subtitle">Inspect the processes running inside the attempt.</p>
+            </div>
+            <div class="task-process-meta">
+              <span class="task-process-status" id="process-panel-status">Hidden</span>
+            </div>
+          </div>
+          <div class="task-process-body">
+            <div class="process-list" id="process-list" role="list"></div>
+            <div class="process-log-viewer" id="process-log-viewer">
+              <div class="process-log-header">
+                <span class="task-view-label">Selected process</span>
+                <span id="process-log-title">Select a process</span>
+              </div>
+              <div
+                class="process-log-entries"
+                id="process-log-entries"
+                role="log"
+                aria-live="polite"
+                aria-relevant="additions"
+              >
+                <div class="empty">Select a process to view logs.</div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
