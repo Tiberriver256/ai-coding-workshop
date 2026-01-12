@@ -26,6 +26,37 @@ The `llm-tldr` tool is vendored at `tools/llm-tldr/` for local inspection and in
    tldr semantic "task persistence" .
    ```
 
+## Changelog + commit hygiene
+We use Conventional Commits and commitlint so the changelog can be generated reliably.
+
+1. Install Node dependencies:
+   ```bash
+   npm install
+   ```
+2. Enable the local commit-msg hook:
+   ```bash
+   ./scripts/setup-githooks.sh
+   ```
+   Or manually:
+   ```bash
+   git config core.hooksPath .githooks
+   ```
+3. Validate commit messages before updating the changelog:
+   ```bash
+   npx commitlint --from HEAD~20 --to HEAD
+   ```
+   (Use a wider range or a tag like `--from v0.1.0` if available.)
+4. Refresh the Unreleased section in `CHANGELOG.md`:
+   ```bash
+   node scripts/update-changelog.js
+   ```
+   Optional range override:
+   ```bash
+   node scripts/update-changelog.js --from v0.1.0 --to HEAD
+   ```
+5. When cutting a release, move the Unreleased entries into a new version section with the date,
+   then rerun the script to repopulate Unreleased.
+
 ## Run the app
 1. From the repo root, start the CLI server:
    ```bash
