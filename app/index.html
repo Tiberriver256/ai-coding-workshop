@@ -289,6 +289,49 @@
       </div>
     </div>
 
+    <div class="modal" id="review-modal" aria-hidden="true" data-review-view="summary" data-diff-mode="inline">
+      <div class="modal-card modal-card--wide" role="dialog" aria-modal="true" aria-labelledby="review-title">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Code Review</p>
+            <h3 id="review-title">Review task changes</h3>
+            <p class="subtitle" id="review-task-meta">Select a task to review.</p>
+          </div>
+          <button class="icon-button" id="close-review" type="button" aria-label="Close">
+            ✕
+          </button>
+        </div>
+        <div class="review-tabs" role="tablist" aria-label="Review views">
+          <button class="review-tab" id="review-summary-tab" type="button" role="tab" aria-selected="true" data-view="summary">
+            Summary
+          </button>
+          <button class="review-tab" id="review-diff-tab" type="button" role="tab" aria-selected="false" data-view="diff">
+            Diff view
+          </button>
+        </div>
+        <section class="review-panel" data-review-panel="summary">
+          <div class="review-summary">
+            <p class="review-summary-title" id="review-summary-title">No task selected</p>
+            <p class="review-summary-copy" id="review-summary-copy">Open the diff view to inspect file changes.</p>
+          </div>
+        </section>
+        <section class="review-panel" data-review-panel="diff">
+          <div class="diff-toolbar">
+            <div class="diff-toggle" role="group" aria-label="Diff layout">
+              <button class="diff-toggle-button" id="diff-inline" type="button" aria-pressed="true" data-mode="inline">
+                Inline
+              </button>
+              <button class="diff-toggle-button" id="diff-split" type="button" aria-pressed="false" data-mode="split">
+                Split
+              </button>
+            </div>
+            <span class="diff-meta" id="diff-view-label">Inline view</span>
+          </div>
+          <div class="diff-file-list" id="diff-file-list" role="list"></div>
+        </section>
+      </div>
+    </div>
+
     <script src="vendor/qrcode.min.js"></script>
     <script src="app.js"></script>
   </body>
