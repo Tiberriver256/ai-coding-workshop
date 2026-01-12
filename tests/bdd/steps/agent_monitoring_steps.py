@@ -102,6 +102,14 @@ def process_entries_include_status_and_timestamps(js_source):
     return has_status and has_time
 
 
+def process_list_has_empty_state(js_source, message):
+    body = extract_function_body(js_source, "renderProcessList")
+    if not body:
+        return False
+    has_guard = bool(re.search(r"taskViewProcesses[\s\S]*?length\s*===?\s*0", body))
+    return has_guard and message in body
+
+
 def has_process_log_seed(js_source):
     return bool(re.search(r"taskProcessLogEntries\s*=\s*\{", js_source))
 
@@ -118,6 +126,15 @@ def step_task_attempt_running(context):
     assert has_id(html, "task-view"), "Task view panel missing"
     assert has_running_attempt(js_source), "Running task attempt seed missing"
     context.monitoring_state = {"html": html, "js": js_source}
+
+
+@given("the attempt has no processes")
+def step_attempt_has_no_processes(context):
+    html = context.monitoring_state["html"]
+    js_source = context.monitoring_state["js"]
+    assert has_id(html, "process-list"), "Process list container missing"
+    assert has_function(js_source, "renderProcessList"), "Process list renderer missing"
+    assert process_list_has_empty_state(js_source, "No processes available."), "Empty process state not handled"
 
 
 @when("I open the task view")
@@ -175,6 +192,12 @@ def step_open_process_logs(context):
     assert has_function(js_source, "renderProcessLogEntry"), "Process log entry renderer missing"
     assert has_process_log_seed(js_source), "Process log seed data missing"
     assert has_list_click_handler(js_source, "process-list", "handleProcessListClick"), "Process list click handler missing"
+
+
+@then("I see a message indicating no processes are available")
+def step_see_empty_process_message(context):
+    js_source = context.monitoring_state["js"]
+    assert process_list_has_empty_state(js_source, "No processes available."), "Empty processes message missing"
 
 
 @when('I click "Stop" on the task attempt')

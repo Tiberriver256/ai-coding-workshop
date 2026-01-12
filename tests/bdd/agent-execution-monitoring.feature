@@ -20,3 +20,8 @@ Feature: Agent execution monitoring
     Then the agent stops the current work
     And the attempt status changes to Stopped
     And evidence is recorded for the stop action
+
+  Scenario: No processes available
+    Given the attempt has no processes
+    When I open "View Processes"
+    Then I see a message indicating no processes are available
