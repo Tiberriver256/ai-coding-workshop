@@ -18,7 +18,6 @@ The current over/near-limit list is below.
 
 | File | Line Count | Status |
 | --- | --- | --- |
-| `package-lock.json` | 1313 | ❌ Over 500 lines (generated lockfile) |
 | `app/app.part2.js` | 499 | ⚠️ Near limit |
 | `app/app.part1.js` | 491 | ⚠️ Near limit |
 | `app/mobile/app.js` | 463 | ⚠️ Near limit |
@@ -27,7 +26,7 @@ The current over/near-limit list is below.
 
 Notes:
 - `utilities/delegate.sh` and `utilities/delegate.how-to.md` are now below 500 lines after the split.
-- `package-lock.json` needs an explicit policy decision (exempt generated lockfiles or change tooling).
+- Lockfile policy (2026-01-12): npm lockfiles are not tracked; `.npmrc` disables `package-lock.json`, and the file is ignored to keep the 500-line rule absolute.
 
 ## Proposed Splits
 

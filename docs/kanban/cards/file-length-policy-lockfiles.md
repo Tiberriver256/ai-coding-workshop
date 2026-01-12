@@ -15,10 +15,15 @@ The file-length rule currently flags lockfiles, blocking automated checks.
 Delegate: Tech debt wrangler.
 
 ## Status
-To Do
+Done
+
+## Decision (2026-01-12)
+- Keep the 500-line rule absolute for tracked files.
+- Do not track npm lockfiles; `.npmrc` disables `package-lock.json` and the file is ignored.
+- `scripts/check-file-lengths.sh` remains unchanged (no exceptions added).
 
 ## Links
-- Evidence: `docs/plan/file-length-audit.md`, `scripts/check-file-lengths.sh`
+- Evidence: `docs/plan/file-length-audit.md`, `scripts/check-file-lengths.sh`, `.npmrc`, `.gitignore`
 
 ## Notes
 - Keep the 500-line rule for hand-edited source/docs.

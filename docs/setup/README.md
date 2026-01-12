@@ -7,6 +7,12 @@ Practical setup steps for running the Slice 0001 app and performing the current 
 - Modern web browser (Chrome, Firefox, Safari, or Edge).
 - Repo cloned locally.
 
+## Lockfile policy (500-line rule)
+This repo does not track npm lockfiles to keep all files under 500 lines.
+
+- `.npmrc` sets `package-lock=false` to prevent `package-lock.json` generation.
+- Use `npm install` as usual; do not commit lockfiles (they are ignored).
+
 ## llm-tldr (code navigation)
 The `llm-tldr` tool is vendored at `tools/llm-tldr/` for local inspection and installs.
 
