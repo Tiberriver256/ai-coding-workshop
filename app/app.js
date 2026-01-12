@@ -344,7 +344,7 @@ function buildTaskPayload({ title, description, startAttempt }) {
   if (startAttempt) { const attempt = createAttempt(defaultAgentConfig); task.attempts = [attempt]; task.activeAttemptId = attempt.id; }
   return task;
 }
-function createPullRequest(task, payload) { if (!task || !isGithubCliReady(githubSettings)) { setGithubCliInstructions(githubSettings); return null; } const timestamp = new Date().toISOString(); const number = Math.floor(Math.random() * 9000) + 1000; const pullRequest = { id: `pr_${Date.now().toString(36)}`, title: payload.title || task.title, description: payload.description || task.description || '', baseBranch: payload.baseBranch || 'main', status: 'open', number, createdAt: timestamp }; task.pullRequest = pullRequest; recordEvidence(task, activityEvidenceTypes.pull_request_created, `PR #${number} created`); task.updatedAt = timestamp; saveTasks(); renderTasks(); return pullRequest; }
+function createPullRequest(task, payload, provider) { const target = provider || getRepoProvider(); if (!task) { return null; } if (target === 'azure') { if (!isAzureCliReady(azureSettings)) { setAzureCliInstructions(azureSettings); return null; } } else if (!isGithubCliReady(githubSettings)) { setGithubCliInstructions(githubSettings); return null; } const timestamp = new Date().toISOString(); const number = Math.floor(Math.random() * 9000) + 1000; const providerLabel = target === 'azure' ? 'Azure DevOps' : 'GitHub'; const pullRequest = { id: `pr_${Date.now().toString(36)}`, title: payload.title || task.title, description: payload.description || task.description || '', baseBranch: payload.baseBranch || 'main', status: 'open', number, provider: target, createdAt: timestamp }; task.pullRequest = pullRequest; recordEvidence(task, activityEvidenceTypes.pull_request_created, `PR #${number} created on ${providerLabel}`); task.updatedAt = timestamp; saveTasks(); renderTasks(); return pullRequest; }
 openModalButton.addEventListener('click', openTaskModal);
 closeModalButton.addEventListener('click', closeTaskModal);
 cancelModalButton.addEventListener('click', closeTaskModal);
@@ -387,7 +387,7 @@ form.addEventListener('submit', (event) => {
   renderTasks();
   closeTaskModal();
 });
-if (prForm) { prForm.addEventListener('submit', (event) => { event.preventDefault(); const task = findTaskById(activePullRequestTaskId); if (!task) { return; } if (!isGithubCliReady(githubSettings)) { setGithubCliInstructions(githubSettings); setPullRequestFormEnabled(false); return; } const baseBranch = prBaseBranchSelect?.value; if (!validateBaseBranchSelection(baseBranch)) { return; } const payload = { title: prTitleInput?.value.trim(), description: prDescriptionInput?.value.trim(), baseBranch }; createPullRequest(task, payload); closePullRequestModal(); }); }
+if (prForm) { prForm.addEventListener('submit', (event) => { event.preventDefault(); const task = findTaskById(activePullRequestTaskId); if (!task) { return; } const provider = getRepoProvider(); if (provider === 'azure') { if (!isAzureCliReady(azureSettings)) { setAzureCliInstructions(azureSettings); setPullRequestFormEnabled(false); return; } } else if (!isGithubCliReady(githubSettings)) { setGithubCliInstructions(githubSettings); setPullRequestFormEnabled(false); return; } const baseBranch = prBaseBranchSelect?.value; if (!validateBaseBranchSelection(baseBranch)) { return; } const payload = { title: prTitleInput?.value.trim(), description: prDescriptionInput?.value.trim(), baseBranch }; createPullRequest(task, payload, provider); closePullRequestModal(); }); }
 function startTaskAttempt(taskId) { const task = findTaskById(taskId); if (!task) { return; } const attempt = createAttempt(defaultAgentConfig); const attempts = Array.isArray(task.attempts) ? task.attempts : []; task.attempts = [attempt, ...attempts]; task.activeAttemptId = attempt.id; task.status = 'in_progress'; recordEvidence(task, activityEvidenceTypes.attempt_started, 'Attempt started'); saveTasks(); renderTasks(); }
 function completeTaskAttempt(taskId) { const task = findTaskById(taskId); if (!task) { return; } const timestamp = new Date().toISOString(); const activeAttempt = getActiveAttempt(task); if (activeAttempt) { activeAttempt.status = 'completed'; activeAttempt.updatedAt = timestamp; } task.status = 'in_review'; recordEvidence(task, activityEvidenceTypes.attempt_completed, 'Attempt completed'); saveTasks(); renderTasks(); }
 function mergeTask(taskId) { const task = findTaskById(taskId); if (!task) { return; } task.status = 'done'; recordEvidence(task, activityEvidenceTypes.task_merged, 'Merged to main'); saveTasks(); renderTasks(); }
@@ -484,6 +484,10 @@ window.addEventListener('storage', (event) => {
   }
   if (event.key === githubCliSettingsKey) {
     githubSettings = loadGithubSettings();
+    return;
+  }
+  if (event.key === azureCliSettingsKey) {
+    azureSettings = loadAzureSettings();
     return;
   }
   if (event.key === assistantProviderKey) {
