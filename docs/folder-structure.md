@@ -34,3 +34,7 @@ tests/
 tools/
 utilities/
 ```
+
+## Feature-Sliced Guidance
+- Rules and examples: `docs/folder-structure/feature-sliced-guidance.md`
+- Linting: `scripts/check-feature-sliced.sh` (use `FSD_ROOTS=path1,path2` to target specific roots)
