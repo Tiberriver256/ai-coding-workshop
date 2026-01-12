@@ -65,6 +65,15 @@ def review_task_has_diff_lines(js_source):
     return bool(re.search(pattern, js_source))
 
 
+def review_task_has_no_diffs(js_source):
+    return bool(re.search(r"diffFiles\s*:\s*\[\s*\]", js_source))
+
+
+def diff_view_has_no_changes_message(js_source):
+    body = extract_function_body(js_source, "renderDiffFileList")
+    return "No code changes yet" in body or "No changes" in body
+
+
 def render_list_opens_review(js_source):
     body = extract_function_body(js_source, "renderTaskList")
     return "openReviewModal" in body and "in_review" in body
@@ -97,6 +106,11 @@ def step_open_task_select_diff(context):
     assert render_list_opens_review(js_source), "Review action is not wired from task list"
     assert has_button_handler(js_source, "review-diff-tab", "setReviewView"), "Diff tab is not wired"
     assert open_review_selects_diff(js_source), "Review modal does not select diff view"
+
+
+@when("I open the diff view")
+def step_open_diff_view(context):
+    step_open_task_select_diff(context)
 
 
 @then("I see the list of files changed")
@@ -203,3 +217,20 @@ def step_review_evidence_recorded(context):
         "sendReviewFeedback",
         ("recordEvidence", "review_feedback_sent"),
     ), "Send feedback does not record review evidence"
+
+
+@given("a task attempt has produced no diffs")
+def step_task_attempt_no_diffs(context):
+    html = load_html()
+    js_source = load_js()
+    assert has_id(html, "diff-file-list"), "Diff file list container missing"
+    assert has_function(js_source, "createNoDiffReviewTask"), "No-diff review task seed missing"
+    assert review_task_has_no_diffs(js_source), "No-diff review task missing empty diff list"
+    context.review_state = {"html": html, "js": js_source}
+
+
+@then("I see a message indicating no changes are available")
+def step_no_changes_message(context):
+    js_source = context.review_state["js"]
+    assert has_function(js_source, "renderDiffFileList"), "Diff file list renderer missing"
+    assert diff_view_has_no_changes_message(js_source), "No changes message not rendered in diff view"

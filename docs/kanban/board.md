@@ -39,6 +39,7 @@ WIP limit: 5 active delegates. Update cards with evidence links.
 - `docs/kanban/cards/feature-code-review-diff-view.md` — Done: added diff review modal, file list, and BDD evidence.
 - `docs/kanban/cards/feature-code-review-line-comments.md` — Done: added line comment UI/logic, review comment list, and BDD coverage.
 - `docs/kanban/cards/feature-code-review-submit.md` — Done: added send feedback flow, evidence capture, and BDD coverage.
+- `docs/kanban/cards/feature-code-review-no-diffs.md` — Done: added no-diff review task, empty-state message, and BDD evidence.
 - `docs/kanban/cards/feature-copilot-cli-enable.md`
 - `docs/kanban/cards/feature-copilot-cli-autocomplete.md`
 - `docs/kanban/cards/feature-copilot-cli-not-installed.md` — Done: added install instructions messaging, enablement guard, and BDD evidence.

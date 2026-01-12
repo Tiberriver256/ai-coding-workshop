@@ -23,3 +23,8 @@ Feature: Code review diff view
     Then all comments are sent together to the agent
     And the task returns to In Progress
     And review evidence is recorded
+
+  Scenario: No code changes yet
+    Given a task attempt has produced no diffs
+    When I open the diff view
+    Then I see a message indicating no changes are available
