@@ -59,6 +59,21 @@ def has_running_attempt(js_source):
     return bool(re.search(pattern, js_source))
 
 
+def has_attempt_evidence_seed(js_source):
+    pattern = r"taskViewAttempt\s*=\s*\{[\s\S]*?evidence\s*:\s*\["
+    return bool(re.search(pattern, js_source))
+
+
+def function_sets_attempt_status(js_source, function_name, status_value):
+    pattern = rf"function\s+{re.escape(function_name)}[\s\S]*?taskViewAttempt[\s\S]*?status\s*=\s*['\"]{re.escape(status_value)}['\"]"
+    return bool(re.search(pattern, js_source))
+
+
+def function_records_attempt_evidence(js_source, function_name, evidence_type):
+    pattern = rf"function\s+{re.escape(function_name)}[\s\S]*?['\"]{re.escape(evidence_type)}['\"]"
+    return bool(re.search(pattern, js_source))
+
+
 def extract_log_entries(js_source):
     match = re.search(r"taskViewLogEntries\s*=\s*\[(?P<body>[\s\S]*?)\];", js_source)
     if not match:
@@ -160,3 +175,33 @@ def step_open_process_logs(context):
     assert has_function(js_source, "renderProcessLogEntry"), "Process log entry renderer missing"
     assert has_process_log_seed(js_source), "Process log seed data missing"
     assert has_list_click_handler(js_source, "process-list", "handleProcessListClick"), "Process list click handler missing"
+
+
+@when('I click "Stop" on the task attempt')
+def step_click_stop_attempt(context):
+    html = context.monitoring_state["html"]
+    js_source = context.monitoring_state["js"]
+    assert has_id(html, "stop-task-attempt"), "Stop attempt button missing"
+    assert button_text_matches(html, "stop-task-attempt", "Stop"), "Stop button label missing"
+    assert has_function(js_source, "stopTaskAttempt"), "Stop attempt handler missing"
+    assert has_button_handler(js_source, "stop-task-attempt", "stopTaskAttempt"), "Stop attempt action not wired"
+
+
+@then("the agent stops the current work")
+def step_agent_stops_work(context):
+    js_source = context.monitoring_state["js"]
+    assert function_body_contains(js_source, "stopTaskAttempt", "stopTaskLogStream"), "Stop action does not halt log streaming"
+
+
+@then("the attempt status changes to Stopped")
+def step_attempt_status_stopped(context):
+    js_source = context.monitoring_state["js"]
+    assert function_sets_attempt_status(js_source, "stopTaskAttempt", "stopped"), "Stop action does not mark attempt as stopped"
+    assert function_body_contains(js_source, "stopTaskAttempt", "Stopped"), "Stop action does not update status label"
+
+
+@then("evidence is recorded for the stop action")
+def step_stop_evidence_recorded(context):
+    js_source = context.monitoring_state["js"]
+    assert has_attempt_evidence_seed(js_source), "Attempt evidence seed missing"
+    assert function_records_attempt_evidence(js_source, "stopTaskAttempt", "attempt_stopped"), "Stop action does not record evidence"

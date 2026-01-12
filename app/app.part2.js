@@ -1,6 +1,5 @@
 const taskViewSection = document.getElementById('task-view');
-const openTaskViewButton = document.getElementById('open-task-view');
-const pauseTaskStreamButton = document.getElementById('pause-task-stream');
+const openTaskViewButton = document.getElementById('open-task-view'); const pauseTaskStreamButton = document.getElementById('pause-task-stream'); const stopTaskAttemptButton = document.getElementById('stop-task-attempt');
 const taskLogStream = document.getElementById('task-log-stream');
 const taskViewStatus = document.getElementById('task-view-status');
 const taskViewAttemptLabel = document.getElementById('task-view-attempt');
@@ -18,8 +17,8 @@ const taskViewAttempt = {
   id: 'attempt_log_stream_demo',
   status: 'running',
   agent: taskViewAgent,
-  startedAt: new Date().toISOString(),
-  taskTitle: 'View real-time execution logs',
+  startedAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+  taskTitle: 'View real-time execution logs', evidence: [],
 };
 const taskViewLogEntries = [
   { id: 'log_1', timestamp: new Date(Date.now() - 120000).toISOString(), kind: 'action', source: 'agent', message: 'Scanning monitoring feature requirements.' },
@@ -123,6 +122,13 @@ function openTaskView() {
 }
 function pauseTaskLogStream() {
   stopTaskLogStream('Paused');
+}
+function stopTaskAttempt() {
+  if (!taskViewAttempt) { return; }
+  const timestamp = new Date().toISOString();
+  taskViewAttempt.status = 'stopped'; taskViewAttempt.updatedAt = timestamp;
+  taskViewAttempt.evidence = [...(Array.isArray(taskViewAttempt.evidence) ? taskViewAttempt.evidence : []), { id: `attempt_stop_${Date.now().toString(36)}`, type: 'attempt_stopped', note: 'Attempt stopped', timestamp }];
+  stopTaskLogStream('Stopped'); renderTaskViewMeta();
 }
 
 function setProcessPanelStatus(message) {
@@ -356,9 +362,7 @@ if (assistantProviderSelect) { assistantProviderSelect.addEventListener('change'
 if (assistantSuggestButton) { assistantSuggestButton.addEventListener('click', () => { requestAssistantSuggestions(); }); }
 if (assistantSuggestions) { assistantSuggestions.addEventListener('click', (event) => { const button = event.target.closest('button[data-suggestion]'); if (!button) { return; } insertSuggestion(button.dataset.suggestion); }); }
 if (reviewSummaryTab) { reviewSummaryTab.addEventListener('click', () => setReviewView('summary')); } if (reviewDiffTab) { reviewDiffTab.addEventListener('click', () => setReviewView('diff')); } if (diffInlineButton) { diffInlineButton.addEventListener('click', () => setDiffViewMode('inline')); } if (diffSplitButton) { diffSplitButton.addEventListener('click', () => setDiffViewMode('split')); } if (diffFileList) { diffFileList.addEventListener('click', handleDiffFileListClick); } if (reviewSendButton) { reviewSendButton.addEventListener('click', sendReviewFeedback); }
-if (openTaskViewButton) { openTaskViewButton.addEventListener('click', openTaskView); }
-if (pauseTaskStreamButton) { pauseTaskStreamButton.addEventListener('click', pauseTaskLogStream); }
-if (openProcessesButton) { openProcessesButton.addEventListener('click', openProcessPanel); }
+if (openTaskViewButton) { openTaskViewButton.addEventListener('click', openTaskView); } if (pauseTaskStreamButton) { pauseTaskStreamButton.addEventListener('click', pauseTaskLogStream); } if (stopTaskAttemptButton) { stopTaskAttemptButton.addEventListener('click', stopTaskAttempt); } if (openProcessesButton) { openProcessesButton.addEventListener('click', openProcessPanel); }
 if (processList) { processList.addEventListener('click', handleProcessListClick); }
 if (activityStartButton) { activityStartButton.addEventListener('click', () => startTaskAttempt(activityTaskId)); } if (activityCompleteButton) { activityCompleteButton.addEventListener('click', () => completeTaskAttempt(activityTaskId)); } if (activityMergeButton) { activityMergeButton.addEventListener('click', () => mergeTask(activityTaskId)); }
 if (activityPrButton) { activityPrButton.addEventListener('click', () => openPullRequestModal(activityTaskId)); } if (prBaseBranchSelect) { prBaseBranchSelect.addEventListener('change', (event) => { validateBaseBranchSelection(event.target.value); }); }

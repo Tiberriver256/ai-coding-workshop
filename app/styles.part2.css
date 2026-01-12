@@ -272,6 +272,14 @@
   flex-wrap: wrap;
   gap: 10px;
 }
+.task-view-actions .danger {
+  border: 1px solid rgba(183, 70, 44, 0.35);
+  background: #ffe9e2;
+  color: #8b2f1c;
+}
+.task-view-actions .danger:hover {
+  background: #ffdacf;
+}
 .task-view-meta {
   margin-top: 14px;
   display: flex;

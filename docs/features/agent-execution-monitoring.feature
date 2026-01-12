@@ -19,6 +19,7 @@ Feature: Monitor and control agent execution
     When I click "Stop" on the task attempt
     Then the agent stops the current work
     And the attempt status changes to Stopped
+    And evidence is recorded for the stop action
 
   Scenario: No processes available
     Given the attempt has no processes

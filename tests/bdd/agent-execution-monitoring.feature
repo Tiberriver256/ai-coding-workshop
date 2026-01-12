@@ -14,3 +14,9 @@ Feature: Agent execution monitoring
     When I open "View Processes"
     Then I see a list of processes with status and timestamps
     And I can open a process to view its logs
+
+  Scenario: Abort a running attempt
+    When I click "Stop" on the task attempt
+    Then the agent stops the current work
+    And the attempt status changes to Stopped
+    And evidence is recorded for the stop action
