@@ -197,6 +197,44 @@ p {
   letter-spacing: 0.16em;
   color: #5a4c32;
 }
+.session-list {
+  display: grid;
+  gap: 10px;
+}
+.session-card {
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  padding: 12px 14px;
+  background: #f6f7fb;
+  display: grid;
+  gap: 6px;
+}
+.session-card h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+.session-meta {
+  font-size: 0.75rem;
+  color: #80786e;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.session-status {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #e9f7ef;
+  color: #2a5b3b;
+  width: fit-content;
+}
+.session-status[data-status='offline'] {
+  background: #fce7df;
+  color: #7c3d2b;
+}
 
 .panel-header {
   display: flex;

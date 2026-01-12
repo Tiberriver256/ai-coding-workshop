@@ -401,6 +401,14 @@
 .process-log-entry { border-radius: 12px; border: 1px solid var(--line); padding: 8px 10px; display: grid; gap: 4px; background: #f8f9fb; }
 .process-log-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
 .process-log-message { margin: 0; font-size: 0.88rem; color: var(--ink); }
+.sessions-panel { margin-top: 24px; background: var(--panel); border-radius: var(--radius); border: 1px solid var(--line); padding: 22px 28px; box-shadow: var(--shadow); }
+.sessions-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 16px; }
+.session-list { display: grid; gap: 12px; }
+.session-card { border-radius: 16px; border: 1px solid var(--line); padding: 14px 16px; background: #f8f9fb; display: grid; gap: 8px; }
+.session-card h4 { margin: 0; font-size: 1rem; }
+.session-meta { display: flex; justify-content: space-between; gap: 12px; font-size: 0.8rem; color: var(--muted); flex-wrap: wrap; }
+.session-status { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.14em; color: #2a5b3b; background: #e9f7ef; padding: 4px 10px; border-radius: 999px; width: fit-content; }
+.session-status[data-status="offline"] { background: #fce7df; color: #7c3d2b; }
 @keyframes pop-in {
   from {
     transform: translateY(10px) scale(0.98);

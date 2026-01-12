@@ -27,6 +27,7 @@ WIP limit: 5 active delegates. Update cards with evidence links.
 - (empty)
 
 ## Done
+- `docs/kanban/cards/feature-remote-session-appear.md` — Done: added session list sync via localStorage, web/mobile session UI, and BDD acceptance evidence.
 - `docs/kanban/cards/feature-agent-monitoring-no-processes.md` — Done: added no-processes empty-state messaging, BDD coverage, and acceptance evidence.
 - `docs/kanban/cards/feature-agent-monitoring-processes.md` — Done: added process list/log viewer UI, BDD steps, and acceptance evidence.
 - `docs/kanban/cards/feature-agent-monitoring-stop.md` — Done: added stop control, status update, evidence capture, and BDD coverage.

@@ -1,4 +1,5 @@
 const storageKey = 'slice0001.tasks';
+const sessionsKey = 'slice0001.sessions';
 const pairingRequestKey = 'slice0001.pairing_request';
 const pairedDevicesKey = 'slice0001.devices';
 const invalidPairingMessage = 'Invalid connection link. Check the QR code and try again.';
@@ -18,8 +19,11 @@ const approvePairingButton = document.getElementById('approve-pairing');
 const rejectPairingButton = document.getElementById('reject-pairing');
 const deviceList = document.getElementById('device-list');
 const deviceCount = document.getElementById('device-count');
+const sessionList = document.getElementById('session-list');
+const sessionCount = document.getElementById('session-count');
 
 let tasks = loadTasks();
+let sessions = loadSessions();
 let pairedDevices = loadPairedDevices();
 let pairingRequest = loadPairingRequest();
 let pairingError = null;
@@ -42,6 +46,7 @@ function loadTasks() {
     return [];
   }
 }
+function loadSessions() { try { const raw = localStorage.getItem(sessionsKey); if (!raw) { return []; } const parsed = JSON.parse(raw); if (!Array.isArray(parsed)) { return []; } return parsed.map((session) => normalizeSession(session)).filter((session) => session !== null); } catch (error) { console.warn('Failed to read sessions from localStorage', error); return []; } }
 function loadPairedDevices() {
   try {
     const raw = localStorage.getItem(pairedDevicesKey);
@@ -84,6 +89,8 @@ function savePairingRequest(request) {
   }
   localStorage.setItem(pairingRequestKey, JSON.stringify(request));
 }
+
+function normalizeSession(session) { if (!session || typeof session !== 'object') { return null; } const createdAt = typeof session.createdAt === 'string' && session.createdAt.trim() ? session.createdAt : new Date().toISOString(); const statusValue = typeof session.status === 'string' && session.status.trim() ? session.status.trim().toLowerCase() : 'online'; const status = statusValue === 'offline' ? 'offline' : 'online'; const name = typeof session.name === 'string' && session.name.trim() ? session.name.trim() : 'Coding session'; return { ...session, name, status, createdAt, updatedAt: typeof session.updatedAt === 'string' && session.updatedAt.trim() ? session.updatedAt : createdAt }; }
 
 function normalizeTask(task) {
   if (!task || typeof task !== 'object') {
@@ -363,6 +370,8 @@ function renderDeviceList() {
   deviceCount.textContent = pairedDevices.length.toString();
 }
 
+function renderSessionList() { if (!sessionList || !sessionCount) { return; } sessionList.innerHTML = ''; if (!Array.isArray(sessions) || sessions.length === 0) { const empty = document.createElement('div'); empty.className = 'empty'; empty.textContent = 'No active sessions yet.'; sessionList.appendChild(empty); sessionCount.textContent = '0'; return; } sessions.forEach((session) => { const card = document.createElement('article'); card.className = 'session-card'; card.setAttribute('role', 'listitem'); const title = document.createElement('h3'); title.textContent = session.name || 'Remote session'; const meta = document.createElement('div'); meta.className = 'session-meta'; const time = document.createElement('span'); time.textContent = session.updatedAt ? `Started ${formatTimestamp(session.updatedAt)}` : 'Online now'; const status = document.createElement('span'); status.className = 'session-status'; status.dataset.status = session.status || 'offline'; status.textContent = session.status === 'online' ? 'Online' : 'Offline'; meta.append(time, status); card.append(title, meta); sessionList.appendChild(card); }); sessionCount.textContent = sessions.length.toString(); }
+
 function renderTaskList(listElement, list, emptyMessage) {
   listElement.innerHTML = '';
 
@@ -424,6 +433,7 @@ function render() {
   doneCount.textContent = doneTasks.length.toString();
   renderPairingRequest();
   renderDeviceList();
+  renderSessionList();
   updateTimestamp();
   updateStatusPill();
 }
@@ -431,6 +441,10 @@ function render() {
 window.addEventListener('storage', (event) => {
   if (event.key === storageKey) {
     tasks = loadTasks();
+    render();
+  }
+  if (event.key === sessionsKey) {
+    sessions = loadSessions();
     render();
   }
   if (event.key === pairedDevicesKey) {

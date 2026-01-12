@@ -46,10 +46,7 @@ const taskProcessLogEntries = {
     { id: 'process_render_2', timestamp: new Date(Date.now() - 35000).toISOString(), level: 'info', message: 'Waiting for next render cycle.' },
   ],
 };
-let taskLogStreamTimer = null;
-let taskLogStreamIndex = 0;
-let activeProcessId = null;
-
+let taskLogStreamTimer = null, taskLogStreamIndex = 0, activeProcessId = null;
 function renderTaskViewMeta() {
   if (!taskViewAttemptLabel) { return; }
   const agent = taskViewAttempt?.agent || {};
@@ -130,7 +127,6 @@ function stopTaskAttempt() {
   taskViewAttempt.evidence = [...(Array.isArray(taskViewAttempt.evidence) ? taskViewAttempt.evidence : []), { id: `attempt_stop_${Date.now().toString(36)}`, type: 'attempt_stopped', note: 'Attempt stopped', timestamp }];
   stopTaskLogStream('Stopped'); renderTaskViewMeta();
 }
-
 function setProcessPanelStatus(message) {
   if (!processPanelStatus) { return; }
   const text = message ? message.trim() : 'Hidden';
@@ -232,7 +228,6 @@ function openProcessPanel() {
   renderProcessList();
   renderProcessLogs(null);
 }
-
 function openReviewModal(taskId, view) {
   if (!reviewModal) { return; }
   const task = findTaskById(taskId);
@@ -263,6 +258,8 @@ function renderDeviceList() {
   if (!Array.isArray(pairedDevices) || pairedDevices.length === 0) { const empty = document.createElement('div'); empty.className = 'empty'; empty.textContent = 'No paired devices yet.'; deviceList.appendChild(empty); return; }
   pairedDevices.forEach((device) => { const card = document.createElement('article'); card.className = 'device-card'; card.setAttribute('role', 'listitem'); const title = document.createElement('h4'); title.textContent = device.name || 'Unnamed device'; const meta = document.createElement('div'); meta.className = 'device-meta'; meta.textContent = device.pairedAt ? `Paired ${formatTimestamp(device.pairedAt)}` : 'Paired recently'; const status = document.createElement('div'); status.className = 'device-status'; status.textContent = device.status ? device.status.toUpperCase() : 'PAIRED'; card.append(title, meta, status); deviceList.appendChild(card); });
 }
+function renderSessionList() { if (!sessionList) { return; } sessionList.innerHTML = ''; if (!Array.isArray(sessions) || sessions.length === 0) { const empty = document.createElement('div'); empty.className = 'empty'; empty.textContent = 'No active sessions yet.'; sessionList.appendChild(empty); return; } sessions.forEach((session) => { const card = document.createElement('article'); card.className = 'session-card'; card.setAttribute('role', 'listitem'); const title = document.createElement('h4'); title.textContent = session.name || 'Remote session'; const meta = document.createElement('div'); meta.className = 'session-meta'; const device = document.createElement('span'); device.textContent = session.deviceName || 'This computer'; const time = document.createElement('span'); time.textContent = session.updatedAt ? `Started ${formatTimestamp(session.updatedAt)}` : 'Online now'; meta.append(device, time); const status = document.createElement('span'); status.className = 'session-status'; status.dataset.status = session.status || 'offline'; status.textContent = session.status === 'online' ? 'Online' : 'Offline'; card.append(title, meta, status); sessionList.appendChild(card); }); }
+function startLocalSession() { const session = createSession(); sessions = [session, ...sessions]; saveSessions(); renderSessionList(); return session; }
 function updatePairingStatus() {
   if (!pairingStatus) { return; }
   if (Array.isArray(pairedDevices) && pairedDevices.length > 0) { pairingStatus.textContent = `${pairedDevices.length} device${pairedDevices.length === 1 ? '' : 's'} paired.`; return; }
@@ -363,7 +360,7 @@ if (assistantSuggestButton) { assistantSuggestButton.addEventListener('click', (
 if (assistantSuggestions) { assistantSuggestions.addEventListener('click', (event) => { const button = event.target.closest('button[data-suggestion]'); if (!button) { return; } insertSuggestion(button.dataset.suggestion); }); }
 if (reviewSummaryTab) { reviewSummaryTab.addEventListener('click', () => setReviewView('summary')); } if (reviewDiffTab) { reviewDiffTab.addEventListener('click', () => setReviewView('diff')); } if (diffInlineButton) { diffInlineButton.addEventListener('click', () => setDiffViewMode('inline')); } if (diffSplitButton) { diffSplitButton.addEventListener('click', () => setDiffViewMode('split')); } if (diffFileList) { diffFileList.addEventListener('click', handleDiffFileListClick); } if (reviewSendButton) { reviewSendButton.addEventListener('click', sendReviewFeedback); }
 if (openTaskViewButton) { openTaskViewButton.addEventListener('click', openTaskView); } if (pauseTaskStreamButton) { pauseTaskStreamButton.addEventListener('click', pauseTaskLogStream); } if (stopTaskAttemptButton) { stopTaskAttemptButton.addEventListener('click', stopTaskAttempt); } if (openProcessesButton) { openProcessesButton.addEventListener('click', openProcessPanel); }
-if (processList) { processList.addEventListener('click', handleProcessListClick); }
+if (processList) { processList.addEventListener('click', handleProcessListClick); } if (startSessionButton) { startSessionButton.addEventListener('click', startLocalSession); }
 if (activityStartButton) { activityStartButton.addEventListener('click', () => startTaskAttempt(activityTaskId)); } if (activityCompleteButton) { activityCompleteButton.addEventListener('click', () => completeTaskAttempt(activityTaskId)); } if (activityMergeButton) { activityMergeButton.addEventListener('click', () => mergeTask(activityTaskId)); }
 if (activityPrButton) { activityPrButton.addEventListener('click', () => openPullRequestModal(activityTaskId)); } if (prBaseBranchSelect) { prBaseBranchSelect.addEventListener('change', (event) => { validateBaseBranchSelection(event.target.value); }); }
 if (copilotToggle) { copilotToggle.addEventListener('change', (event) => { setCopilotEnabled(event.target.checked); }); }
@@ -464,6 +461,11 @@ window.addEventListener('storage', (event) => {
     renderTasks();
     return;
   }
+  if (event.key === sessionsKey) {
+    sessions = loadSessions();
+    renderSessionList();
+    return;
+  }
   if (event.key === pairedDevicesKey) {
     pairedDevices = loadPairedDevices();
     renderDeviceList();
@@ -494,5 +496,4 @@ window.addEventListener('storage', (event) => {
     setAssistantProvider(assistantProvider);
   }
 });
-seedActivityTask(); seedReviewTask();
-renderTasks();
+seedActivityTask(); seedReviewTask(); renderTasks(); renderSessionList();
