@@ -6,7 +6,7 @@
     <title>Slice 0001 · Task Board</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
+  <body data-repo-provider="azure">
     <div class="page">
       <header class="app-header">
         <div>
@@ -247,7 +247,7 @@
       <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="pr-modal-title">
         <div class="modal-header">
           <div>
-            <p class="eyebrow">GitHub</p>
+            <p class="eyebrow" id="pr-provider-label">GitHub</p>
             <h3 id="pr-modal-title">Create pull request</h3>
           </div>
           <button class="icon-button" id="close-pr" type="button" aria-label="Close">
@@ -256,6 +256,7 @@
         </div>
         <p class="modal-copy">Review the draft and choose where to merge.</p>
         <p class="modal-copy" id="github-cli-instructions" role="alert" hidden></p>
+        <p class="modal-copy" id="azure-cli-instructions" role="alert" hidden></p>
 
         <form id="pr-form" novalidate>
           <label class="field">
