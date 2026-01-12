@@ -6,7 +6,7 @@ const copilotSuggestionTemplates = ['Use Copilot CLI to outline a step-by-step a
 const activityTaskId = 'task_agent_activity_demo', reviewTaskId = 'task_code_review_demo';
 const activityEvidenceTypes = { attempt_started: 'attempt_started', attempt_completed: 'attempt_completed', task_merged: 'task_merged', pull_request_created: 'pull_request_created' };
 const activityEvidenceLabels = { attempt_started: 'Attempt started', attempt_completed: 'Attempt completed', task_merged: 'Merged into main', pull_request_created: 'Pull request created' };
-const todoList = document.getElementById('todo-list'), todoCount = document.getElementById('todo-count'), inProgressList = document.getElementById('in-progress-list'), inProgressCount = document.getElementById('in-progress-count'), inReviewList = document.getElementById('in-review-list'), inReviewCount = document.getElementById('in-review-count'), doneList = document.getElementById('done-list'), doneCount = document.getElementById('done-count'), taskModal = document.getElementById('task-modal'), openModalButton = document.getElementById('open-modal'), closeModalButton = document.getElementById('close-modal'), cancelModalButton = document.getElementById('cancel-modal'), form = document.getElementById('task-form'), titleInput = document.getElementById('task-title'), descriptionInput = document.getElementById('task-description'), assistantPanel = document.getElementById('assistant-panel'), assistantToggle = document.getElementById('assistant-toggle'), assistantProviderSelect = document.getElementById('assistant-provider'), assistantSuggestButton = document.getElementById('assistant-suggest'), assistantSuggestions = document.getElementById('assistant-suggestions'), titleError = document.getElementById('title-error'), connectModal = document.getElementById('connect-modal'), openConnectButton = document.getElementById('open-connect'), openPairingButton = document.getElementById('open-pairing'), closeConnectButton = document.getElementById('close-connect'), qrCodeContainer = document.getElementById('qr-code'), pairingLinkInput = document.getElementById('pairing-link'), copyLinkButton = document.getElementById('copy-link'), activityPanel = document.getElementById('agent-activity'), activityTaskTitle = document.getElementById('activity-task-title'), activityStartButton = document.getElementById('activity-start'), activityCompleteButton = document.getElementById('activity-complete'), activityMergeButton = document.getElementById('activity-merge'), activityPrButton = document.getElementById('activity-pr'), activityLog = document.getElementById('activity-log'), prModal = document.getElementById('pr-modal'), prForm = document.getElementById('pr-form'), prTitleInput = document.getElementById('pr-title'), prDescriptionInput = document.getElementById('pr-description'), prBaseBranchSelect = document.getElementById('pr-base-branch'), prBaseBranchError = document.getElementById('pr-base-branch-error'), closePrButton = document.getElementById('close-pr'), cancelPrButton = document.getElementById('cancel-pr'), submitPrButton = document.getElementById('submit-pr'), githubCliInstructions = document.getElementById('github-cli-instructions'), azureCliInstructions = document.getElementById('azure-cli-instructions'), azureRepoUnsupportedMessage = document.getElementById('azure-repo-unsupported'), prProviderLabel = document.getElementById('pr-provider-label'), searchInput = document.getElementById('task-search'), deviceList = document.getElementById('device-list'), pairingStatus = document.getElementById('pairing-status'), copilotToggle = document.getElementById('copilot-toggle'), copilotStatus = document.getElementById('copilot-status'), copilotInstructions = document.getElementById('copilot-instructions'), copilotPill = document.getElementById('copilot-pill'), reviewModal = document.getElementById('review-modal'), reviewTaskMeta = document.getElementById('review-task-meta'), reviewSummaryTitle = document.getElementById('review-summary-title'), reviewSummaryCopy = document.getElementById('review-summary-copy'), reviewSummaryTab = document.getElementById('review-summary-tab'), reviewDiffTab = document.getElementById('review-diff-tab'), closeReviewButton = document.getElementById('close-review'), diffFileList = document.getElementById('diff-file-list'), diffInlineButton = document.getElementById('diff-inline'), diffSplitButton = document.getElementById('diff-split'), diffViewLabel = document.getElementById('diff-view-label');
+const todoList = document.getElementById('todo-list'), todoCount = document.getElementById('todo-count'), inProgressList = document.getElementById('in-progress-list'), inProgressCount = document.getElementById('in-progress-count'), inReviewList = document.getElementById('in-review-list'), inReviewCount = document.getElementById('in-review-count'), doneList = document.getElementById('done-list'), doneCount = document.getElementById('done-count'), taskModal = document.getElementById('task-modal'), openModalButton = document.getElementById('open-modal'), closeModalButton = document.getElementById('close-modal'), cancelModalButton = document.getElementById('cancel-modal'), form = document.getElementById('task-form'), titleInput = document.getElementById('task-title'), descriptionInput = document.getElementById('task-description'), assistantPanel = document.getElementById('assistant-panel'), assistantToggle = document.getElementById('assistant-toggle'), assistantProviderSelect = document.getElementById('assistant-provider'), assistantSuggestButton = document.getElementById('assistant-suggest'), assistantSuggestions = document.getElementById('assistant-suggestions'), titleError = document.getElementById('title-error'), connectModal = document.getElementById('connect-modal'), openConnectButton = document.getElementById('open-connect'), openPairingButton = document.getElementById('open-pairing'), closeConnectButton = document.getElementById('close-connect'), qrCodeContainer = document.getElementById('qr-code'), pairingLinkInput = document.getElementById('pairing-link'), copyLinkButton = document.getElementById('copy-link'), activityPanel = document.getElementById('agent-activity'), activityTaskTitle = document.getElementById('activity-task-title'), activityStartButton = document.getElementById('activity-start'), activityCompleteButton = document.getElementById('activity-complete'), activityMergeButton = document.getElementById('activity-merge'), activityPrButton = document.getElementById('activity-pr'), activityLog = document.getElementById('activity-log'), prModal = document.getElementById('pr-modal'), prForm = document.getElementById('pr-form'), prTitleInput = document.getElementById('pr-title'), prDescriptionInput = document.getElementById('pr-description'), prBaseBranchSelect = document.getElementById('pr-base-branch'), prBaseBranchError = document.getElementById('pr-base-branch-error'), closePrButton = document.getElementById('close-pr'), cancelPrButton = document.getElementById('cancel-pr'), submitPrButton = document.getElementById('submit-pr'), githubCliInstructions = document.getElementById('github-cli-instructions'), azureCliInstructions = document.getElementById('azure-cli-instructions'), azureRepoUnsupportedMessage = document.getElementById('azure-repo-unsupported'), prProviderLabel = document.getElementById('pr-provider-label'), searchInput = document.getElementById('task-search'), deviceList = document.getElementById('device-list'), pairingStatus = document.getElementById('pairing-status'), copilotToggle = document.getElementById('copilot-toggle'), copilotStatus = document.getElementById('copilot-status'), copilotInstructions = document.getElementById('copilot-instructions'), copilotPill = document.getElementById('copilot-pill'), reviewModal = document.getElementById('review-modal'), reviewTaskMeta = document.getElementById('review-task-meta'), reviewSummaryTitle = document.getElementById('review-summary-title'), reviewSummaryCopy = document.getElementById('review-summary-copy'), reviewSummaryTab = document.getElementById('review-summary-tab'), reviewDiffTab = document.getElementById('review-diff-tab'), closeReviewButton = document.getElementById('close-review'), diffFileList = document.getElementById('diff-file-list'), reviewCommentList = document.getElementById('review-comment-list'), reviewCommentCount = document.getElementById('review-comment-count'), diffInlineButton = document.getElementById('diff-inline'), diffSplitButton = document.getElementById('diff-split'), diffViewLabel = document.getElementById('diff-view-label');
 let tasks = loadTasks(); let pairedDevices = loadPairedDevices(); let pairingRequest = loadPairingRequest();
 let copilotSettings = loadCopilotSettings(); let githubSettings = loadGithubSettings(); let azureSettings = loadAzureSettings();
 let assistantEnabled = false; let activePullRequestTaskId = null; let activeReviewTaskId = null; let reviewView = 'summary'; let diffViewMode = 'inline';
@@ -145,6 +145,7 @@ function setSearchQuery(value) {
 function createTaskId() { return `task_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
 function createAttemptId() { return `attempt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
 function createEvidenceId() { return `evidence_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
+function createReviewCommentId() { return `review_comment_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
 function createPairingToken() { return `pair_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
 function getDeviceName() {
   const hostname = window.location.hostname || 'Local computer';
@@ -170,7 +171,57 @@ function formatEvidenceLabel(type) { return !type ? 'Update logged' : activityEv
 function recordEvidence(task, type, note) { if (!task) { return null; } const timestamp = new Date().toISOString(); const entry = { id: createEvidenceId(), type, note: note || '', timestamp }; task.evidence = [...(Array.isArray(task.evidence) ? task.evidence : []), entry]; task.updatedAt = timestamp; return entry; }
 function createActivityTask() { const timestamp = new Date().toISOString(); return { id: activityTaskId, title: 'Agent status demo', description: 'Track this task as the agent moves through start, review, and merge.', status: 'todo', createdAt: timestamp, updatedAt: timestamp, attempts: [], activeAttemptId: null, evidence: [], changes: ['Drafted PR summary', 'Updated UI copy'], isDemo: true }; }
 function seedActivityTask() { if (tasks.some((task) => task.id === activityTaskId) || tasks.some((task) => normalizeStatus(task.status) === 'todo')) { return; } tasks = [createActivityTask(), ...tasks]; saveTasks(); }
-function createReviewTask() { const timestamp = new Date().toISOString(); return { id: reviewTaskId, title: 'Diff view review', description: 'Review file changes and switch diff layouts.', status: 'in_review', createdAt: timestamp, updatedAt: timestamp, attempts: [], activeAttemptId: null, evidence: [], diffFiles: [{ path: 'app/index.html', additions: 12, deletions: 3, status: 'modified' }, { path: 'app/styles.css', additions: 18, deletions: 6, status: 'modified' }, { path: 'app/app.js', additions: 24, deletions: 10, status: 'modified' }], isDemo: true }; }
+function createReviewTask() {
+  const timestamp = new Date().toISOString();
+  return {
+    id: reviewTaskId,
+    title: 'Diff view review',
+    description: 'Review file changes and switch diff layouts.',
+    status: 'in_review',
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    attempts: [],
+    activeAttemptId: null,
+    evidence: [],
+    diffFiles: [
+      {
+        path: 'app/index.html',
+        additions: 12,
+        deletions: 3,
+        status: 'modified',
+        lines: [
+          { lineNumber: 118, type: 'context', content: '<section class="column" aria-labelledby="in-review-title">' },
+          { lineNumber: 124, type: 'add', content: '<span class="pill pill-review">Review</span>' },
+          { lineNumber: 126, type: 'del', content: '<span class="pill pill-muted">Review</span>' },
+        ],
+      },
+      {
+        path: 'app/styles.part1.css',
+        additions: 18,
+        deletions: 6,
+        status: 'modified',
+        lines: [
+          { lineNumber: 321, type: 'context', content: '.review-panel { display: none; }' },
+          { lineNumber: 330, type: 'add', content: '.diff-file-list { display: grid; gap: 10px; }' },
+          { lineNumber: 337, type: 'del', content: '.diff-stat-del { color: #7c3d2b; }' },
+        ],
+      },
+      {
+        path: 'app/app.part1.js',
+        additions: 24,
+        deletions: 10,
+        status: 'modified',
+        lines: [
+          { lineNumber: 210, type: 'context', content: 'const diffViewMode = \"inline\";' },
+          { lineNumber: 223, type: 'add', content: 'renderReviewComments(task);' },
+          { lineNumber: 236, type: 'del', content: 'diffFileList.innerHTML = \"\";' },
+        ],
+      },
+    ],
+    reviewComments: [],
+    isDemo: true,
+  };
+}
 function seedReviewTask() { if (tasks.some((task) => task.id === reviewTaskId) || tasks.some((task) => normalizeStatus(task.status) === 'in_review')) { return; } tasks = [createReviewTask(), ...tasks]; saveTasks(); }
 function findTaskById(taskId) { return tasks.find((task) => task.id === taskId); }
 function renderTasks() {
@@ -257,243 +308,193 @@ function renderActivityPanel() {
 function setReviewView(view) { reviewView = view === 'diff' ? 'diff' : 'summary'; if (reviewModal) { reviewModal.setAttribute('data-review-view', reviewView); } if (reviewSummaryTab) { reviewSummaryTab.setAttribute('aria-selected', reviewView === 'summary'); } if (reviewDiffTab) { reviewDiffTab.setAttribute('aria-selected', reviewView === 'diff'); } }
 function setDiffViewMode(mode) { diffViewMode = mode === 'split' ? 'split' : 'inline'; if (reviewModal) { reviewModal.setAttribute('data-diff-mode', diffViewMode); } if (diffInlineButton) { diffInlineButton.setAttribute('aria-pressed', diffViewMode === 'inline'); } if (diffSplitButton) { diffSplitButton.setAttribute('aria-pressed', diffViewMode === 'split'); } if (diffViewLabel) { diffViewLabel.textContent = diffViewMode === 'split' ? 'Split view' : 'Inline view'; } }
 function renderReviewSummary(task) { if (!reviewSummaryTitle || !reviewSummaryCopy) { return; } if (!task) { reviewSummaryTitle.textContent = 'No task selected'; reviewSummaryCopy.textContent = 'Open the diff view to inspect file changes.'; return; } const files = Array.isArray(task.diffFiles) ? task.diffFiles.length : 0; reviewSummaryTitle.textContent = task.title || 'Review task'; reviewSummaryCopy.textContent = files ? `${files} file${files === 1 ? '' : 's'} changed. Open the diff view to inspect.` : 'No file changes are available yet.'; }
-function renderDiffFileList(task) { if (!diffFileList) { return; } diffFileList.innerHTML = ''; const files = Array.isArray(task?.diffFiles) ? task.diffFiles : []; if (files.length === 0) { const empty = document.createElement('div'); empty.className = 'empty'; empty.textContent = 'No file changes available.'; diffFileList.appendChild(empty); return; } files.forEach((file) => { const item = document.createElement('div'); item.className = 'diff-file'; item.setAttribute('role', 'listitem'); const path = document.createElement('div'); path.className = 'diff-file-path'; path.textContent = file.path || 'Untitled file'; const meta = document.createElement('div'); meta.className = 'diff-file-meta'; const status = document.createElement('span'); status.className = 'diff-file-status'; status.textContent = file.status || 'modified'; const additions = document.createElement('span'); additions.className = 'diff-stat diff-stat-add'; additions.textContent = `+${file.additions || 0}`; const deletions = document.createElement('span'); deletions.className = 'diff-stat diff-stat-del'; deletions.textContent = `-${file.deletions || 0}`; meta.append(status, additions, deletions); item.append(path, meta); diffFileList.appendChild(item); }); }
-function openReviewModal(taskId, view) { if (!reviewModal) { return; } const task = findTaskById(taskId); if (!task) { return; } activeReviewTaskId = task.id; if (reviewTaskMeta) { reviewTaskMeta.textContent = task.title || 'Review task'; } renderReviewSummary(task); renderDiffFileList(task); setReviewView(view || 'diff'); setDiffViewMode(diffViewMode); reviewModal.setAttribute('aria-hidden', 'false'); reviewModal.setAttribute('data-state', 'open'); }
-function closeReviewModal() { if (!reviewModal) { return; } reviewModal.setAttribute('aria-hidden', 'true'); reviewModal.setAttribute('data-state', 'closed'); activeReviewTaskId = null; setReviewView('summary'); setDiffViewMode('inline'); }
-function renderDeviceList() {
-  if (!deviceList) { return; }
-  deviceList.innerHTML = '';
-  if (!Array.isArray(pairedDevices) || pairedDevices.length === 0) { const empty = document.createElement('div'); empty.className = 'empty'; empty.textContent = 'No paired devices yet.'; deviceList.appendChild(empty); return; }
-  pairedDevices.forEach((device) => { const card = document.createElement('article'); card.className = 'device-card'; card.setAttribute('role', 'listitem'); const title = document.createElement('h4'); title.textContent = device.name || 'Unnamed device'; const meta = document.createElement('div'); meta.className = 'device-meta'; meta.textContent = device.pairedAt ? `Paired ${formatTimestamp(device.pairedAt)}` : 'Paired recently'; const status = document.createElement('div'); status.className = 'device-status'; status.textContent = device.status ? device.status.toUpperCase() : 'PAIRED'; card.append(title, meta, status); deviceList.appendChild(card); });
-}
-function updatePairingStatus() {
-  if (!pairingStatus) { return; }
-  if (Array.isArray(pairedDevices) && pairedDevices.length > 0) { pairingStatus.textContent = `${pairedDevices.length} device${pairedDevices.length === 1 ? '' : 's'} paired.`; return; }
-  if (pairingRequest && pairingRequest.status === 'pending') { pairingStatus.textContent = 'Pairing request awaiting approval.'; return; }
-  if (pairingRequest && pairingRequest.status === 'rejected') { pairingStatus.textContent = 'Pairing request rejected.'; return; }
-  pairingStatus.textContent = 'No devices paired yet.';
-}
-function openTaskModal() { taskModal.setAttribute('aria-hidden', 'false'); taskModal.setAttribute('data-state', 'open'); titleInput.focus(); }
-function closeTaskModal() { taskModal.setAttribute('aria-hidden', 'true'); taskModal.setAttribute('data-state', 'closed'); form.reset(); clearValidation(); resetAssistantUI(); }
-function openPullRequestModal(taskId, requestedProvider) { if (!prModal) { return; } const task = findTaskById(taskId); if (!task) { return; } const repoProvider = getRepoProvider(); const provider = requestedProvider || repoProvider; setPullRequestProviderLabel(provider); setAzureRepoUnsupportedMessage(false); if (isAzureRepoUnsupported(provider)) { activePullRequestTaskId = null; setAzureRepoUnsupportedMessage(true); setAzureCliInstructions(); setGithubCliInstructions(); setPullRequestFormEnabled(false); prModal.setAttribute('aria-hidden', 'false'); prModal.setAttribute('data-state', 'open'); return; } if (provider === 'azure') { const ready = isAzureCliReady(azureSettings); if (!ready) { activePullRequestTaskId = null; setAzureCliInstructions(azureSettings); setGithubCliInstructions(); setPullRequestFormEnabled(false); prModal.setAttribute('aria-hidden', 'false'); prModal.setAttribute('data-state', 'open'); return; } setAzureCliInstructions(azureSettings); setGithubCliInstructions(); } else { const ready = isGithubCliReady(githubSettings); if (!ready) { activePullRequestTaskId = null; setGithubCliInstructions(githubSettings); setAzureCliInstructions(); setPullRequestFormEnabled(false); prModal.setAttribute('aria-hidden', 'false'); prModal.setAttribute('data-state', 'open'); return; } setGithubCliInstructions(githubSettings); setAzureCliInstructions(); } setPullRequestFormEnabled(true); activePullRequestTaskId = task.id; if (prTitleInput) { prTitleInput.value = task.title || ''; } if (prDescriptionInput) { prDescriptionInput.value = task.description || ''; } if (prBaseBranchSelect) { prBaseBranchSelect.value = task.pullRequest?.baseBranch || prBaseBranchSelect.value || 'main'; } setBaseBranchError(''); prModal.setAttribute('aria-hidden', 'false'); prModal.setAttribute('data-state', 'open'); prTitleInput?.focus(); }
-function closePullRequestModal() { if (!prModal) { return; } prModal.setAttribute('aria-hidden', 'true'); prModal.setAttribute('data-state', 'closed'); if (prForm) { prForm.reset(); } setGithubCliInstructions(); setAzureCliInstructions(); setAzureRepoUnsupportedMessage(false); setPullRequestProviderLabel(getRepoProvider()); setPullRequestFormEnabled(true); setBaseBranchError(''); activePullRequestTaskId = null; }
-function clearValidation() { titleError.textContent = ''; titleInput.removeAttribute('aria-invalid'); }
-function validateForm() { const titleValue = titleInput.value.trim(); if (!titleValue) { titleError.textContent = 'Title is required.'; titleInput.setAttribute('aria-invalid', 'true'); titleInput.focus(); return false; } clearValidation(); return true; }
-function clearAssistantSuggestions() { if (!assistantSuggestions) { return; } assistantSuggestions.innerHTML = ''; assistantSuggestions.setAttribute('data-state', 'empty'); assistantSuggestions.removeAttribute('data-provider'); }
-function renderAssistantSuggestions(suggestions) {
-  if (!assistantSuggestions) { return; }
-  assistantSuggestions.innerHTML = '';
-  if (!suggestions || suggestions.length === 0) { assistantSuggestions.setAttribute('data-state', 'empty'); return; }
-  assistantSuggestions.setAttribute('data-state', 'ready');
-  suggestions.forEach((suggestion) => { const button = document.createElement('button'); button.type = 'button'; button.className = 'assistant-suggestion'; button.dataset.suggestion = suggestion; const label = document.createElement('span'); label.className = 'assistant-suggestion-label'; label.textContent = 'Use suggestion'; const text = document.createElement('span'); text.className = 'assistant-suggestion-text'; text.textContent = suggestion; button.append(label, text); assistantSuggestions.appendChild(button); });
-}
-function setCopilotInstructions(message, state) { if (!copilotInstructions) { return; } const text = message ? message.trim() : ''; copilotInstructions.textContent = text; copilotInstructions.setAttribute('data-state', text ? (state || 'visible') : 'hidden'); }
-function updateCopilotStatusUI() {
-  if (!copilotStatus || !copilotPill || !copilotToggle) { return; }
-  const ready = isCopilotReady(copilotSettings);
-  copilotToggle.disabled = !ready; copilotToggle.checked = Boolean(copilotSettings?.enabled) && ready;
-  if (!copilotSettings?.installed) {
-    copilotStatus.textContent = 'Copilot CLI not installed';
-    copilotPill.textContent = 'Install required';
-    copilotPill.classList.add('is-muted');
-    setCopilotInstructions('Install Copilot CLI with: gh extension install github/gh-copilot.', 'install');
+function getReviewComments(task) { return Array.isArray(task?.reviewComments) ? task.reviewComments : []; }
+function lineHasComment(comments, filePath, lineNumber) { return comments.some((comment) => comment.filePath === filePath && comment.lineNumber === lineNumber); }
+function renderReviewComments(task) {
+  if (!reviewCommentList || !reviewCommentCount) { return; }
+  const comments = getReviewComments(task);
+  reviewCommentCount.textContent = comments.length.toString();
+  reviewCommentList.innerHTML = '';
+  if (!task || comments.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'review-comment-empty';
+    empty.textContent = 'No review comments yet.';
+    reviewCommentList.appendChild(empty);
     return;
   }
-  if (!copilotSettings?.authenticated) {
-    copilotStatus.textContent = 'Copilot CLI needs authentication';
-    copilotPill.textContent = 'Sign in required';
-    copilotPill.classList.add('is-muted');
-    setCopilotInstructions('Authenticate Copilot CLI with: gh copilot auth.', 'auth');
+  comments.forEach((comment) => {
+    const item = document.createElement('div');
+    item.className = 'review-comment-item';
+    item.setAttribute('role', 'listitem');
+    const meta = document.createElement('div');
+    meta.className = 'review-comment-meta';
+    const lineLabel = comment.lineNumber ? `Line ${comment.lineNumber}` : 'Line';
+    meta.textContent = `${comment.filePath || 'File'} · ${lineLabel}`;
+    const text = document.createElement('p');
+    text.className = 'review-comment-text';
+    text.textContent = comment.text || '';
+    item.append(meta, text);
+    reviewCommentList.appendChild(item);
+  });
+}
+function buildLineCommentForm(filePath, lineNumber) {
+  const form = document.createElement('div');
+  form.className = 'diff-comment-form';
+  form.dataset.filePath = filePath || '';
+  form.dataset.lineNumber = lineNumber ? lineNumber.toString() : '';
+  const textarea = document.createElement('textarea');
+  textarea.className = 'diff-comment-input';
+  textarea.placeholder = 'Add a line-specific comment';
+  const actions = document.createElement('div');
+  actions.className = 'diff-comment-actions';
+  const submit = document.createElement('button');
+  submit.type = 'button';
+  submit.className = 'diff-comment-submit';
+  submit.textContent = 'Add comment';
+  const cancel = document.createElement('button');
+  cancel.type = 'button';
+  cancel.className = 'diff-comment-cancel';
+  cancel.textContent = 'Cancel';
+  actions.append(submit, cancel);
+  form.append(textarea, actions);
+  return form;
+}
+function closeOpenCommentForms() {
+  if (!diffFileList) { return; }
+  diffFileList.querySelectorAll('.diff-comment-form').forEach((form) => form.remove());
+  diffFileList.querySelectorAll('.diff-line.is-commenting').forEach((line) => line.classList.remove('is-commenting'));
+}
+function toggleLineCommentForm(lineRow, filePath, lineNumber) {
+  if (!lineRow || !diffFileList) { return; }
+  const existing = lineRow.nextElementSibling;
+  if (existing && existing.classList.contains('diff-comment-form')) {
+    existing.remove();
+    lineRow.classList.remove('is-commenting');
     return;
   }
-  setCopilotInstructions('');
-  if (copilotSettings?.enabled) {
-    copilotStatus.textContent = 'Connected';
-    copilotPill.textContent = 'Connected'; copilotPill.classList.remove('is-muted');
-    return;
-  }
-  copilotStatus.textContent = 'Ready to connect'; copilotPill.textContent = 'Available';
-  copilotPill.classList.add('is-muted');
+  closeOpenCommentForms();
+  const form = buildLineCommentForm(filePath, lineNumber);
+  lineRow.classList.add('is-commenting');
+  lineRow.insertAdjacentElement('afterend', form);
+  const input = form.querySelector('textarea');
+  input?.focus();
 }
-function updateAssistantProviderAvailability() {
-  if (!assistantProviderSelect) { return; }
-  const copilotOption = assistantProviderSelect.querySelector('option[value="copilot-cli"]');
-  if (copilotOption) {
-    copilotOption.disabled = !copilotSettings?.enabled;
-  }
-  const normalized = normalizeAssistantProvider(assistantProviderSelect.value, copilotSettings?.enabled);
-  if (normalized !== assistantProviderSelect.value) {
-    assistantProviderSelect.value = normalized;
-  }
-  setAssistantProvider(assistantProviderSelect.value);
-}
-function setCopilotEnabled(enabled) {
-  const ready = isCopilotReady(copilotSettings);
-  const nextEnabled = ready && Boolean(enabled);
-  copilotSettings = { ...copilotSettings, enabled: nextEnabled };
-  saveCopilotSettings(copilotSettings);
-  updateCopilotStatusUI();
-  updateAssistantProviderAvailability();
-}
-function setAssistantProvider(value) {
-  assistantProvider = normalizeAssistantProvider(value, copilotSettings?.enabled);
-  if (assistantProviderSelect) { assistantProviderSelect.value = assistantProvider; }
-  saveAssistantProvider(assistantProvider);
-  if (assistantPanel) { assistantPanel.setAttribute('data-provider', assistantProvider); }
-}
-function setAssistantEnabled(enabled) { assistantEnabled = enabled; if (assistantSuggestButton) { assistantSuggestButton.disabled = !enabled; } if (assistantPanel) { assistantPanel.setAttribute('data-enabled', enabled ? 'true' : 'false'); } if (!enabled) { clearAssistantSuggestions(); assistantDrafts = []; } }
-function requestAssistantSuggestions() { if (!assistantEnabled) { return; } if (assistantProvider === 'copilot-cli' && !copilotSettings?.enabled) { return; } const suggestions = assistantProvider === 'copilot-cli' ? copilotSuggestionTemplates : assistantSuggestionTemplates; assistantDrafts = [...suggestions]; renderAssistantSuggestions(assistantDrafts); if (assistantSuggestions) { assistantSuggestions.setAttribute('data-provider', assistantProvider); } }
-function insertSuggestion(suggestion) { if (!suggestion) { return; } const current = descriptionInput.value.trim(); const spacer = current ? ' ' : ''; descriptionInput.value = `${current}${spacer}${suggestion}`; descriptionInput.focus(); }
-function resetAssistantUI() { if (assistantToggle) { assistantToggle.checked = false; } setAssistantEnabled(false); }
-function buildTaskPayload({ title, description, startAttempt }) {
+function addLineComment(taskId, filePath, lineNumber, text) {
+  const task = findTaskById(taskId);
+  if (!task) { return null; }
+  const trimmed = typeof text === 'string' ? text.trim() : '';
+  if (!trimmed) { return null; }
   const timestamp = new Date().toISOString();
-  const task = { id: createTaskId(), title, description, status: startAttempt ? 'in_progress' : 'todo', createdAt: timestamp, updatedAt: timestamp, attempts: [], activeAttemptId: null, evidence: [] };
-  if (startAttempt) { const attempt = createAttempt(defaultAgentConfig); task.attempts = [attempt]; task.activeAttemptId = attempt.id; }
-  return task;
-}
-function createPullRequest(task, payload, provider) { const target = provider || getRepoProvider(); if (!task) { return null; } if (isAzureRepoUnsupported(target)) { setAzureRepoUnsupportedMessage(true); setPullRequestFormEnabled(false); return null; } setAzureRepoUnsupportedMessage(false); if (target === 'azure') { if (!isAzureCliReady(azureSettings)) { setAzureCliInstructions(azureSettings); setPullRequestFormEnabled(false); return null; } } else if (!isGithubCliReady(githubSettings)) { setGithubCliInstructions(githubSettings); setPullRequestFormEnabled(false); return null; } const timestamp = new Date().toISOString(); const number = Math.floor(Math.random() * 9000) + 1000; const providerLabel = target === 'azure' ? 'Azure DevOps' : 'GitHub'; const pullRequest = { id: `pr_${Date.now().toString(36)}`, title: payload.title || task.title, description: payload.description || task.description || '', baseBranch: payload.baseBranch || 'main', status: 'open', number, provider: target, createdAt: timestamp }; task.pullRequest = pullRequest; recordEvidence(task, activityEvidenceTypes.pull_request_created, `PR #${number} created on ${providerLabel}`); task.updatedAt = timestamp; saveTasks(); renderTasks(); return pullRequest; }
-openModalButton.addEventListener('click', openTaskModal); closeModalButton.addEventListener('click', closeTaskModal); cancelModalButton.addEventListener('click', closeTaskModal);
-taskModal.addEventListener('click', (event) => { if (event.target === taskModal) { closeTaskModal(); } });
-if (closePrButton) { closePrButton.addEventListener('click', closePullRequestModal); } if (cancelPrButton) { cancelPrButton.addEventListener('click', closePullRequestModal); } if (prModal) { prModal.addEventListener('click', (event) => { if (event.target === prModal) { closePullRequestModal(); } }); }
-if (closeReviewButton) { closeReviewButton.addEventListener('click', closeReviewModal); }
-if (reviewModal) { reviewModal.addEventListener('click', (event) => { if (event.target === reviewModal) { closeReviewModal(); } }); }
-window.addEventListener('keydown', (event) => { if (event.key !== 'Escape') { return; } if (taskModal.getAttribute('aria-hidden') === 'false') { closeTaskModal(); } if (connectModal.getAttribute('aria-hidden') === 'false') { closeConnectModal(); } if (prModal?.getAttribute('aria-hidden') === 'false') { closePullRequestModal(); } if (reviewModal?.getAttribute('aria-hidden') === 'false') { closeReviewModal(); } });
-titleInput.addEventListener('input', () => { if (titleInput.value.trim()) { clearValidation(); } });
-if (searchInput) { searchQuery = normalizeSearchQuery(searchInput.value); searchInput.addEventListener('input', (event) => { setSearchQuery(event.target.value); }); }
-if (assistantToggle) { assistantToggle.addEventListener('change', (event) => { setAssistantEnabled(event.target.checked); }); }
-if (assistantProviderSelect) { assistantProviderSelect.addEventListener('change', (event) => { setAssistantProvider(event.target.value); }); }
-if (assistantSuggestButton) { assistantSuggestButton.addEventListener('click', () => { requestAssistantSuggestions(); }); }
-if (assistantSuggestions) { assistantSuggestions.addEventListener('click', (event) => { const button = event.target.closest('button[data-suggestion]'); if (!button) { return; } insertSuggestion(button.dataset.suggestion); }); }
-if (reviewSummaryTab) { reviewSummaryTab.addEventListener('click', () => setReviewView('summary')); } if (reviewDiffTab) { reviewDiffTab.addEventListener('click', () => setReviewView('diff')); } if (diffInlineButton) { diffInlineButton.addEventListener('click', () => setDiffViewMode('inline')); } if (diffSplitButton) { diffSplitButton.addEventListener('click', () => setDiffViewMode('split')); }
-if (activityStartButton) { activityStartButton.addEventListener('click', () => startTaskAttempt(activityTaskId)); } if (activityCompleteButton) { activityCompleteButton.addEventListener('click', () => completeTaskAttempt(activityTaskId)); } if (activityMergeButton) { activityMergeButton.addEventListener('click', () => mergeTask(activityTaskId)); }
-if (activityPrButton) { activityPrButton.addEventListener('click', () => openPullRequestModal(activityTaskId)); } if (prBaseBranchSelect) { prBaseBranchSelect.addEventListener('change', (event) => { validateBaseBranchSelection(event.target.value); }); }
-if (copilotToggle) { copilotToggle.addEventListener('change', (event) => { setCopilotEnabled(event.target.checked); }); }
-registerColumnDropTargets(); setAssistantEnabled(Boolean(assistantToggle?.checked)); setAssistantProvider(assistantProvider); updateCopilotStatusUI(); updateAssistantProviderAvailability();
-form.addEventListener('submit', (event) => {
-  event.preventDefault();
-  if (!validateForm()) {
-    return;
-  }
-  const submitter = event.submitter;
-  const action = submitter?.dataset?.action || 'create';
-  const startAttempt = action === 'create-start';
-  const newTask = buildTaskPayload({
-    title: titleInput.value.trim(),
-    description: descriptionInput.value.trim(),
-    startAttempt,
-  });
-  tasks = [newTask, ...tasks];
+  const entry = { id: createReviewCommentId(), filePath: filePath || '', lineNumber: lineNumber || null, text: trimmed, createdAt: timestamp };
+  task.reviewComments = [...getReviewComments(task), entry];
+  task.updatedAt = timestamp;
   saveTasks();
-  renderTasks();
-  closeTaskModal();
-});
-if (prForm) { prForm.addEventListener('submit', (event) => { event.preventDefault(); const task = findTaskById(activePullRequestTaskId); if (!task) { return; } const provider = getRepoProvider(); if (provider === 'azure') { if (!isAzureCliReady(azureSettings)) { setAzureCliInstructions(azureSettings); setPullRequestFormEnabled(false); return; } } else if (!isGithubCliReady(githubSettings)) { setGithubCliInstructions(githubSettings); setPullRequestFormEnabled(false); return; } const baseBranch = prBaseBranchSelect?.value; if (!validateBaseBranchSelection(baseBranch)) { return; } const payload = { title: prTitleInput?.value.trim(), description: prDescriptionInput?.value.trim(), baseBranch }; const pullRequest = createPullRequest(task, payload, provider); if (!pullRequest) { return; } closePullRequestModal(); }); }
-function startTaskAttempt(taskId) { const task = findTaskById(taskId); if (!task) { return; } const attempt = createAttempt(defaultAgentConfig); const attempts = Array.isArray(task.attempts) ? task.attempts : []; task.attempts = [attempt, ...attempts]; task.activeAttemptId = attempt.id; task.status = 'in_progress'; recordEvidence(task, activityEvidenceTypes.attempt_started, 'Attempt started'); saveTasks(); renderTasks(); }
-function completeTaskAttempt(taskId) { const task = findTaskById(taskId); if (!task) { return; } const timestamp = new Date().toISOString(); const activeAttempt = getActiveAttempt(task); if (activeAttempt) { activeAttempt.status = 'completed'; activeAttempt.updatedAt = timestamp; } task.status = 'in_review'; recordEvidence(task, activityEvidenceTypes.attempt_completed, 'Attempt completed'); saveTasks(); renderTasks(); }
-function mergeTask(taskId) { const task = findTaskById(taskId); if (!task) { return; } task.status = 'done'; recordEvidence(task, activityEvidenceTypes.task_merged, 'Merged to main'); saveTasks(); renderTasks(); }
-function markTaskDone(taskId) { moveTaskToStatus(taskId, 'done'); }
-function getPairingLink(request) {
-  const url = new URL('mobile/', window.location.href);
-  if (request?.id) { url.searchParams.set('pairing', request.id); }
-  if (request?.deviceName) { url.searchParams.set('device', request.deviceName); }
-  return url.toString();
+  renderReviewComments(task);
+  renderDiffFileList(task);
+  return entry;
 }
-function renderQrCode(url) {
-  if (!qrCodeContainer) {
+function renderDiffLines(file, comments) {
+  const container = document.createElement('div');
+  container.className = 'diff-lines';
+  const lines = Array.isArray(file?.lines) ? file.lines : [];
+  if (lines.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = 'No line changes recorded.';
+    container.appendChild(empty);
+    return container;
+  }
+  lines.forEach((line) => {
+    const lineNumber = Number(line.lineNumber || line.line || 0) || 0;
+    const lineType = line.type || 'context';
+    const row = document.createElement('div');
+    row.className = 'diff-line';
+    row.dataset.lineType = lineType;
+    row.dataset.filePath = file.path || '';
+    row.dataset.lineNumber = lineNumber ? lineNumber.toString() : '';
+    const gutter = document.createElement('div');
+    gutter.className = 'diff-line-gutter';
+    gutter.textContent = lineNumber ? lineNumber.toString() : '';
+    const code = document.createElement('pre');
+    code.className = 'diff-line-code';
+    code.textContent = line.content || '';
+    const commentButton = document.createElement('button');
+    commentButton.type = 'button';
+    commentButton.className = 'diff-line-comment';
+    commentButton.textContent = 'Comment';
+    commentButton.setAttribute('aria-label', `Add comment for line ${lineNumber || ''}`.trim());
+    if (lineHasComment(comments, file.path || '', lineNumber || null)) {
+      commentButton.dataset.hasComment = 'true';
+    }
+    row.append(gutter, code, commentButton);
+    container.appendChild(row);
+  });
+  return container;
+}
+function renderDiffFileList(task) {
+  if (!diffFileList) { return; }
+  diffFileList.innerHTML = '';
+  const files = Array.isArray(task?.diffFiles) ? task.diffFiles : [];
+  if (files.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = 'No file changes available.';
+    diffFileList.appendChild(empty);
     return;
   }
-  qrCodeContainer.innerHTML = '';
-  if (typeof QRCode === 'undefined') {
-    const fallback = document.createElement('p');
-    fallback.textContent = 'QR generator unavailable.';
-    qrCodeContainer.appendChild(fallback);
-    return;
-  }
-  const size = 200;
-  new QRCode(qrCodeContainer, {
-    text: url,
-    width: size,
-    height: size,
-    colorDark: '#1f1c1a',
-    colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.M,
+  const comments = getReviewComments(task);
+  files.forEach((file) => {
+    const item = document.createElement('div');
+    item.className = 'diff-file';
+    item.setAttribute('role', 'listitem');
+    const header = document.createElement('div');
+    header.className = 'diff-file-header';
+    const path = document.createElement('div');
+    path.className = 'diff-file-path';
+    path.textContent = file.path || 'Untitled file';
+    const meta = document.createElement('div');
+    meta.className = 'diff-file-meta';
+    const status = document.createElement('span');
+    status.className = 'diff-file-status';
+    status.textContent = file.status || 'modified';
+    const additions = document.createElement('span');
+    additions.className = 'diff-stat diff-stat-add';
+    additions.textContent = `+${file.additions || 0}`;
+    const deletions = document.createElement('span');
+    deletions.className = 'diff-stat diff-stat-del';
+    deletions.textContent = `-${file.deletions || 0}`;
+    meta.append(status, additions, deletions);
+    header.append(path, meta);
+    item.append(header, renderDiffLines(file, comments));
+    diffFileList.appendChild(item);
   });
 }
-function openConnectModal() {
-  connectModal.setAttribute('aria-hidden', 'false');
-  pairingRequest = createPairingRequest();
-  savePairingRequest(pairingRequest);
-  const pairingLink = getPairingLink(pairingRequest);
-  if (pairingLinkInput) { pairingLinkInput.value = pairingLink; }
-  copyLinkButton.textContent = 'Copy link';
-  renderQrCode(pairingLink);
-  updatePairingStatus();
-}
-function closeConnectModal() {
-  connectModal.setAttribute('aria-hidden', 'true');
-}
-async function copyMobileLink() {
-  if (!pairingLinkInput) { return; }
-  const url = pairingLinkInput.value;
-  if (!url) {
+function handleDiffFileListClick(event) {
+  if (!event || !diffFileList) { return; }
+  const commentButton = event.target.closest('.diff-line-comment');
+  if (commentButton) {
+    const lineRow = commentButton.closest('.diff-line');
+    if (!lineRow) { return; }
+    const filePath = lineRow.dataset.filePath || '';
+    const lineNumber = Number(lineRow.dataset.lineNumber || 0) || 0;
+    toggleLineCommentForm(lineRow, filePath, lineNumber);
     return;
   }
-  try {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(url);
-    } else {
-      pairingLinkInput.select();
-      document.execCommand('copy');
-    }
-    copyLinkButton.textContent = 'Copied!';
-  } catch (error) {
-    copyLinkButton.textContent = 'Copy failed';
+  const submitButton = event.target.closest('.diff-comment-submit');
+  if (submitButton) {
+    const form = submitButton.closest('.diff-comment-form');
+    if (!form) { return; }
+    const input = form.querySelector('.diff-comment-input');
+    const filePath = form.dataset.filePath || '';
+    const lineNumber = Number(form.dataset.lineNumber || 0) || 0;
+    addLineComment(activeReviewTaskId, filePath, lineNumber, input?.value || '');
+    form.remove();
+    return;
+  }
+  const cancelButton = event.target.closest('.diff-comment-cancel');
+  if (cancelButton) {
+    const form = cancelButton.closest('.diff-comment-form');
+    if (form) { form.remove(); }
+    return;
   }
 }
-openConnectButton.addEventListener('click', openConnectModal);
-if (openPairingButton) { openPairingButton.addEventListener('click', openConnectModal); }
-closeConnectButton.addEventListener('click', closeConnectModal);
-connectModal.addEventListener('click', (event) => {
-  if (event.target === connectModal) {
-    closeConnectModal();
-  }
-});
-copyLinkButton.addEventListener('click', copyMobileLink);
-window.addEventListener('storage', (event) => {
-  if (event.key === storageKey) {
-    tasks = loadTasks();
-    renderTasks();
-    return;
-  }
-  if (event.key === pairedDevicesKey) {
-    pairedDevices = loadPairedDevices();
-    renderDeviceList();
-    updatePairingStatus();
-    return;
-  }
-  if (event.key === pairingRequestKey) {
-    pairingRequest = loadPairingRequest();
-    updatePairingStatus();
-    return;
-  }
-  if (event.key === copilotSettingsKey) {
-    copilotSettings = loadCopilotSettings();
-    updateCopilotStatusUI();
-    updateAssistantProviderAvailability();
-    return;
-  }
-  if (event.key === githubCliSettingsKey) {
-    githubSettings = loadGithubSettings();
-    return;
-  }
-  if (event.key === azureCliSettingsKey) {
-    azureSettings = loadAzureSettings();
-    return;
-  }
-  if (event.key === assistantProviderKey) {
-    assistantProvider = loadAssistantProvider();
-    setAssistantProvider(assistantProvider);
-  }
-});
-seedActivityTask(); seedReviewTask();
-renderTasks();

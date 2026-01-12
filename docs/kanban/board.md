@@ -37,6 +37,7 @@ WIP limit: 5 active delegates. Update cards with evidence links.
 - `docs/kanban/cards/feature-azure-pr-missing-cli.md` — Done: added Azure CLI missing guidance, PR guardrails, and BDD evidence.
 - `docs/kanban/cards/feature-azure-pr-unsupported-repo.md` — Done: added unsupported repo messaging, PR guardrails, and BDD evidence.
 - `docs/kanban/cards/feature-code-review-diff-view.md` — Done: added diff review modal, file list, and BDD evidence.
+- `docs/kanban/cards/feature-code-review-line-comments.md` — Done: added line comment UI/logic, review comment list, and BDD coverage.
 - `docs/kanban/cards/feature-copilot-cli-enable.md`
 - `docs/kanban/cards/feature-copilot-cli-autocomplete.md`
 - `docs/kanban/cards/feature-copilot-cli-not-installed.md` — Done: added install instructions messaging, enablement guard, and BDD evidence.

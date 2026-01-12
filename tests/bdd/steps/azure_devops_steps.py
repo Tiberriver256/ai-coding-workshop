@@ -1,19 +1,7 @@
-from pathlib import Path
 import re
 
 from behave import given, then, when
-
-REPO_ROOT = Path(__file__).resolve().parents[3]
-
-
-def load_html():
-    html_path = REPO_ROOT / "app" / "index.html"
-    return html_path.read_text(encoding="utf-8")
-
-
-def load_js():
-    js_path = REPO_ROOT / "app" / "app.js"
-    return js_path.read_text(encoding="utf-8")
+from app_loader import load_html, load_js
 
 
 def has_id(html, element_id):

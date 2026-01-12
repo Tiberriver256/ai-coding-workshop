@@ -1,10 +1,8 @@
 from html.parser import HTMLParser
-from pathlib import Path
 import re
 
 from behave import given, when, then
-
-REPO_ROOT = Path(__file__).resolve().parents[3]
+from app_loader import load_html, load_js
 
 
 class ButtonParser(HTMLParser):
@@ -34,16 +32,6 @@ class ButtonParser(HTMLParser):
         self.buttons.append(self._current)
         self._current = None
         self._buffer = []
-
-
-def load_html():
-    html_path = REPO_ROOT / "app" / "index.html"
-    return html_path.read_text(encoding="utf-8")
-
-
-def load_js():
-    js_path = REPO_ROOT / "app" / "app.js"
-    return js_path.read_text(encoding="utf-8")
 
 
 def has_id(html, element_id):

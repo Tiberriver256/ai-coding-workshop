@@ -1,9 +1,7 @@
-from pathlib import Path
 import re
 
 from behave import given, when, then
-
-REPO_ROOT = Path(__file__).resolve().parents[3]
+from app_loader import REPO_ROOT
 
 
 def load_cli_script():

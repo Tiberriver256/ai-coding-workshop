@@ -4,7 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Slice 0001 · Task Board</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.part1.css" />
+    <link rel="stylesheet" href="styles.part2.css" />
   </head>
   <body data-repo-provider="azure">
     <div class="page">
@@ -328,11 +329,19 @@
             <span class="diff-meta" id="diff-view-label">Inline view</span>
           </div>
           <div class="diff-file-list" id="diff-file-list" role="list"></div>
+          <div class="review-comments" id="review-comments">
+            <div class="review-comments-header">
+              <h4>Review comments</h4>
+              <span class="review-comments-count" id="review-comment-count">0</span>
+            </div>
+            <div class="review-comment-list" id="review-comment-list" role="list"></div>
+          </div>
         </section>
       </div>
     </div>
 
     <script src="vendor/qrcode.min.js"></script>
-    <script src="app.js"></script>
+    <script src="app.part1.js"></script>
+    <script src="app.part2.js"></script>
   </body>
 </html>

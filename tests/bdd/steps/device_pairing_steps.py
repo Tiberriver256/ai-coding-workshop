@@ -1,29 +1,22 @@
-from pathlib import Path
 import re
 
 from behave import given, when, then
-
-REPO_ROOT = Path(__file__).resolve().parents[3]
-
-
-def load_text(path):
-    return path.read_text(encoding="utf-8")
+from app_loader import (
+    REPO_ROOT,
+    load_html,
+    load_js,
+    load_mobile_html,
+    load_mobile_js,
+    load_text,
+)
 
 
 def load_desktop_html():
-    return load_text(REPO_ROOT / "app" / "index.html")
+    return load_html()
 
 
 def load_desktop_js():
-    return load_text(REPO_ROOT / "app" / "app.js")
-
-
-def load_mobile_html():
-    return load_text(REPO_ROOT / "app" / "mobile" / "index.html")
-
-
-def load_mobile_js():
-    return load_text(REPO_ROOT / "app" / "mobile" / "app.js")
+    return load_js()
 
 
 def load_cli_script():
