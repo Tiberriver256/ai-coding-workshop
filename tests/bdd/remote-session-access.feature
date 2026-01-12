@@ -11,3 +11,10 @@ Feature: Remote session access
     Then the session appears in the mobile app sessions list
     And the session appears in the web app sessions list
     And the session shows as online
+
+  Scenario: Start a session in a chosen directory from the mobile app
+    Given I am viewing my computer in the mobile app
+    When I enter a project path
+    And I start a new session
+    Then a new session is created on my computer
+    And the session opens on my phone

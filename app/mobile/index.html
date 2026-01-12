@@ -57,6 +57,33 @@
             <h2 id="mobile-sessions">Sessions</h2>
             <span class="count" id="session-count">0</span>
           </div>
+          <div class="session-start">
+            <label class="field-label" for="project-path-input">Project path</label>
+            <div class="session-start-row">
+              <input
+                id="project-path-input"
+                type="text"
+                placeholder="~/projects/your-app"
+                autocomplete="off"
+              />
+              <button class="primary" id="start-mobile-session" type="button">Start session</button>
+            </div>
+            <p class="helper" id="project-path-status">
+              Enter a project path on your paired computer.
+            </p>
+          </div>
+          <div class="active-session" id="active-session" role="status" aria-live="polite">
+            <div class="active-session-header">
+              <h3>Active session</h3>
+              <span class="session-status" id="active-session-status" data-status="offline">
+                Offline
+              </span>
+            </div>
+            <p class="active-session-title" id="active-session-name">No session open.</p>
+            <p class="active-session-meta" id="active-session-meta">
+              Start a session to open it here.
+            </p>
+          </div>
           <div class="session-list" id="session-list" role="list"></div>
         </section>
 

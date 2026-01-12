@@ -27,7 +27,13 @@ WIP limit: 5 active delegates. Update cards with evidence links.
 - (empty)
 
 ## Done
+- `docs/kanban/cards/ci-fix.md` — Done: restored task count UI, gated demo seeding, refreshed persisted tasks, and updated acceptance selectors.
+- `docs/kanban/cards/feature-sliced-linter.md` — Done: added feature-sliced guidance + lint script, linked from folder-structure docs, and cloned reference docs.
+- `docs/kanban/cards/bdd-strategy-expert-review.md` — Done: captured expert reviews, updated BDD strategy, and indexed feedback.
+- `docs/kanban/cards/commitlint-hooks.md` — Done: added commitlint config, commit-msg hook, and setup docs.
+- `docs/kanban/cards/changelog-setup.md` — Done: added CHANGELOG, update script, and commitlint-driven workflow.
 - `docs/kanban/cards/feature-remote-session-appear.md` — Done: added session list sync via localStorage, web/mobile session UI, and BDD acceptance evidence.
+- `docs/kanban/cards/feature-remote-session-mobile-start.md` — Done: added mobile project path start flow, active session panel, BDD steps, and acceptance evidence.
 - `docs/kanban/cards/feature-agent-monitoring-no-processes.md` — Done: added no-processes empty-state messaging, BDD coverage, and acceptance evidence.
 - `docs/kanban/cards/feature-agent-monitoring-processes.md` — Done: added process list/log viewer UI, BDD steps, and acceptance evidence.
 - `docs/kanban/cards/feature-agent-monitoring-stop.md` — Done: added stop control, status update, evidence capture, and BDD coverage.

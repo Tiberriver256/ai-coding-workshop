@@ -17,8 +17,17 @@ def js_has_click_handler(source, element_id, function_name):
     return bool(re.search(pattern, source))
 
 
+def js_has_element_reference(source, element_id):
+    pattern = rf"getElementById\(\s*['\"]{re.escape(element_id)}['\"]\s*\)"
+    return bool(re.search(pattern, source))
+
+
 def js_uses_sessions_key(source):
     return "slice0001.sessions" in source
+
+
+def js_uses_active_session_key(source):
+    return "slice0001.mobile_active_session" in source
 
 
 def extract_function_body(source, function_name):
@@ -97,3 +106,57 @@ def step_session_online(context):
     assert function_body_contains(mobile_js, "renderSessionList", "Online"), "Mobile session online label missing"
     assert function_body_contains(desktop_js, "renderSessionList", "online"), "Web session online status missing"
     assert function_body_contains(mobile_js, "renderSessionList", "online"), "Mobile session online status missing"
+
+
+@given("I am viewing my computer in the mobile app")
+def step_view_mobile_computer(context):
+    mobile_html = load_mobile_html()
+    mobile_js = load_mobile_js()
+    assert has_id(mobile_html, "device-list"), "Mobile device list missing"
+    assert has_id(mobile_html, "project-path-input"), "Mobile project path input missing"
+    assert js_has_element_reference(mobile_js, "project-path-input"), "Mobile project path input not wired"
+    context.session_state = {
+        "mobile_html": mobile_html,
+        "mobile_js": mobile_js,
+    }
+
+
+@when("I enter a project path")
+def step_enter_project_path(context):
+    mobile_html = context.session_state["mobile_html"]
+    mobile_js = context.session_state["mobile_js"]
+    assert has_id(mobile_html, "project-path-input"), "Mobile project path input missing"
+    assert has_id(mobile_html, "project-path-status"), "Mobile project path status missing"
+    assert js_has_element_reference(mobile_js, "project-path-input"), "Mobile project path input not referenced"
+
+
+@when("I start a new session")
+def step_start_mobile_session(context):
+    mobile_html = context.session_state["mobile_html"]
+    mobile_js = context.session_state["mobile_js"]
+    assert has_id(mobile_html, "start-mobile-session"), "Mobile start session button missing"
+    assert js_has_function(mobile_js, "startMobileSession"), "Mobile session start handler missing"
+    assert js_has_click_handler(
+        mobile_js, "start-mobile-session", "startMobileSession"
+    ), "Mobile start session action not wired"
+
+
+@then("a new session is created on my computer")
+def step_mobile_session_created(context):
+    mobile_js = context.session_state["mobile_js"]
+    assert js_uses_sessions_key(mobile_js), "Mobile sessions storage key missing"
+    assert js_has_function(mobile_js, "saveSessions"), "Mobile sessions save helper missing"
+    assert js_has_function(mobile_js, "createSessionFromPath"), "Mobile session factory missing"
+    assert function_body_contains(
+        mobile_js, "startMobileSession", "saveSessions"
+    ), "Mobile start session does not persist"
+
+
+@then("the session opens on my phone")
+def step_mobile_session_open(context):
+    mobile_html = context.session_state["mobile_html"]
+    mobile_js = context.session_state["mobile_js"]
+    assert has_id(mobile_html, "active-session"), "Active session panel missing"
+    assert js_has_function(mobile_js, "renderActiveSession"), "Active session renderer missing"
+    assert js_has_function(mobile_js, "setActiveSession"), "Active session setter missing"
+    assert js_uses_active_session_key(mobile_js), "Active session storage key missing"

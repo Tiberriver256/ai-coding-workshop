@@ -1,5 +1,6 @@
 const storageKey = 'slice0001.tasks';
 const sessionsKey = 'slice0001.sessions';
+const activeSessionKey = 'slice0001.mobile_active_session';
 const pairingRequestKey = 'slice0001.pairing_request';
 const pairedDevicesKey = 'slice0001.devices';
 const invalidPairingMessage = 'Invalid connection link. Check the QR code and try again.';
@@ -21,32 +22,27 @@ const deviceList = document.getElementById('device-list');
 const deviceCount = document.getElementById('device-count');
 const sessionList = document.getElementById('session-list');
 const sessionCount = document.getElementById('session-count');
+const projectPathInput = document.getElementById('project-path-input');
+const projectPathStatus = document.getElementById('project-path-status');
+const startMobileSessionButton = document.getElementById('start-mobile-session');
+const activeSessionPanel = document.getElementById('active-session');
+const activeSessionName = document.getElementById('active-session-name');
+const activeSessionMeta = document.getElementById('active-session-meta');
+const activeSessionStatus = document.getElementById('active-session-status');
 
 let tasks = loadTasks();
 let sessions = loadSessions();
 let pairedDevices = loadPairedDevices();
 let pairingRequest = loadPairingRequest();
+let activeSessionId = loadActiveSessionId();
 let pairingError = null;
 
-function loadTasks() {
-  try {
-    const raw = localStorage.getItem(storageKey);
-    if (!raw) {
-      return [];
-    }
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-    return parsed
-      .map((task) => normalizeTask(task))
-      .filter((task) => task !== null);
-  } catch (error) {
-    console.warn('Failed to read tasks from localStorage', error);
-    return [];
-  }
-}
+function loadTasks() { try { const raw = localStorage.getItem(storageKey); if (!raw) { return []; } const parsed = JSON.parse(raw); if (!Array.isArray(parsed)) { return []; } return parsed.map((task) => normalizeTask(task)).filter((task) => task !== null); } catch (error) { console.warn('Failed to read tasks from localStorage', error); return []; } }
 function loadSessions() { try { const raw = localStorage.getItem(sessionsKey); if (!raw) { return []; } const parsed = JSON.parse(raw); if (!Array.isArray(parsed)) { return []; } return parsed.map((session) => normalizeSession(session)).filter((session) => session !== null); } catch (error) { console.warn('Failed to read sessions from localStorage', error); return []; } }
+function saveSessions() { localStorage.setItem(sessionsKey, JSON.stringify(sessions)); }
+function loadActiveSessionId() { try { const value = localStorage.getItem(activeSessionKey); return value && value.trim() ? value : null; } catch (error) { console.warn('Failed to read active session', error); return null; } }
+function saveActiveSessionId(value) { if (!value) { localStorage.removeItem(activeSessionKey); return; } localStorage.setItem(activeSessionKey, value); }
+function createSessionId() { return `session_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
 function loadPairedDevices() {
   try {
     const raw = localStorage.getItem(pairedDevicesKey);
@@ -90,49 +86,17 @@ function savePairingRequest(request) {
   localStorage.setItem(pairingRequestKey, JSON.stringify(request));
 }
 
-function normalizeSession(session) { if (!session || typeof session !== 'object') { return null; } const createdAt = typeof session.createdAt === 'string' && session.createdAt.trim() ? session.createdAt : new Date().toISOString(); const statusValue = typeof session.status === 'string' && session.status.trim() ? session.status.trim().toLowerCase() : 'online'; const status = statusValue === 'offline' ? 'offline' : 'online'; const name = typeof session.name === 'string' && session.name.trim() ? session.name.trim() : 'Coding session'; return { ...session, name, status, createdAt, updatedAt: typeof session.updatedAt === 'string' && session.updatedAt.trim() ? session.updatedAt : createdAt }; }
+function normalizeSession(session) { if (!session || typeof session !== 'object') { return null; } const createdAt = typeof session.createdAt === 'string' && session.createdAt.trim() ? session.createdAt : new Date().toISOString(); const statusValue = typeof session.status === 'string' && session.status.trim() ? session.status.trim().toLowerCase() : 'online'; const status = statusValue === 'offline' ? 'offline' : 'online'; const projectPath = typeof session.projectPath === 'string' && session.projectPath.trim() ? session.projectPath.trim() : ''; const fallbackName = projectPath ? projectPath.split(/[\\/]/).filter(Boolean).slice(-1)[0] : 'Coding session'; const name = typeof session.name === 'string' && session.name.trim() ? session.name.trim() : fallbackName; const updatedAt = typeof session.updatedAt === 'string' && session.updatedAt.trim() ? session.updatedAt : createdAt; const id = typeof session.id === 'string' && session.id.trim() ? session.id.trim() : createSessionId(); return { ...session, id, name, status, projectPath, createdAt, updatedAt }; }
+function createSessionFromPath(projectPath) { const trimmed = projectPath.trim(); const timestamp = new Date().toISOString(); const projectName = trimmed ? trimmed.split(/[\\/]/).filter(Boolean).slice(-1)[0] : 'Coding session'; const name = trimmed ? `${projectName} session` : 'Coding session'; return normalizeSession({ id: createSessionId(), name, status: 'online', createdAt: timestamp, updatedAt: timestamp, projectPath: trimmed }); }
+function getActiveSession() { if (!Array.isArray(sessions) || sessions.length === 0) { return null; } if (activeSessionId) { const found = sessions.find((session) => session.id === activeSessionId); if (found) { return found; } } return sessions[0]; }
+function setActiveSession(session) { if (!session) { activeSessionId = null; saveActiveSessionId(null); return; } activeSessionId = session.id; saveActiveSessionId(activeSessionId); }
+function renderActiveSession() { if (!activeSessionPanel || !activeSessionName || !activeSessionMeta || !activeSessionStatus) { return; } const session = getActiveSession(); if (!session) { activeSessionName.textContent = 'No session open.'; activeSessionMeta.textContent = 'Start a session to open it here.'; activeSessionStatus.textContent = 'Offline'; activeSessionStatus.dataset.status = 'offline'; return; } activeSessionName.textContent = session.name || 'Active session'; activeSessionMeta.textContent = session.projectPath ? `Path: ${session.projectPath}` : 'Ready to connect.'; activeSessionStatus.textContent = session.status === 'online' ? 'Online' : 'Offline'; activeSessionStatus.dataset.status = session.status === 'online' ? 'online' : 'offline'; }
 
-function normalizeTask(task) {
-  if (!task || typeof task !== 'object') {
-    return null;
-  }
+function normalizeTask(task) { if (!task || typeof task !== 'object') { return null; } const createdAt = typeof task.createdAt === 'string' && task.createdAt.trim() ? task.createdAt : new Date().toISOString(); return { ...task, status: typeof task.status === 'string' && task.status.trim() ? task.status : 'todo', createdAt, updatedAt: typeof task.updatedAt === 'string' && task.updatedAt.trim() ? task.updatedAt : createdAt }; }
 
-  const createdAt =
-    typeof task.createdAt === 'string' && task.createdAt.trim()
-      ? task.createdAt
-      : new Date().toISOString();
-
-  return {
-    ...task,
-    status: typeof task.status === 'string' && task.status.trim() ? task.status : 'todo',
-    createdAt,
-    updatedAt:
-      typeof task.updatedAt === 'string' && task.updatedAt.trim() ? task.updatedAt : createdAt,
-  };
-}
-
-function formatTimestamp(isoString) {
-  try {
-    const date = new Date(isoString);
-    return date.toLocaleTimeString(undefined, {
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-  } catch (error) {
-    return 'Just now';
-  }
-}
-function setManualLinkStatus(message, tone) {
-  if (!manualLinkStatus) {
-    return;
-  }
-  manualLinkStatus.textContent = message || '';
-  if (!tone) {
-    manualLinkStatus.removeAttribute('data-tone');
-    return;
-  }
-  manualLinkStatus.dataset.tone = tone;
-}
+function formatTimestamp(isoString) { try { const date = new Date(isoString); return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }); } catch (error) { return 'Just now'; } }
+function setManualLinkStatus(message, tone) { if (!manualLinkStatus) { return; } manualLinkStatus.textContent = message || ''; if (!tone) { manualLinkStatus.removeAttribute('data-tone'); return; } manualLinkStatus.dataset.tone = tone; }
+function setProjectPathStatus(message, tone) { if (!projectPathStatus) { return; } projectPathStatus.textContent = message || ''; if (!tone) { projectPathStatus.removeAttribute('data-tone'); return; } projectPathStatus.dataset.tone = tone; }
 function setPairingDetailsTone(tone) {
   if (!pairingDetails) {
     return;
@@ -370,6 +334,26 @@ function renderDeviceList() {
   deviceCount.textContent = pairedDevices.length.toString();
 }
 
+function startMobileSession() {
+  if (!projectPathInput) {
+    return;
+  }
+  const value = projectPathInput.value.trim();
+  if (!value) {
+    setProjectPathStatus('Enter a project path to continue.', 'error');
+    return;
+  }
+  const session = createSessionFromPath(value);
+  sessions = [session, ...sessions];
+  saveSessions();
+  setActiveSession(session);
+  renderSessionList();
+  renderActiveSession();
+  setProjectPathStatus(`Session started for ${session.projectPath}.`, 'success');
+  projectPathInput.value = '';
+  updateTimestamp();
+}
+
 function renderSessionList() { if (!sessionList || !sessionCount) { return; } sessionList.innerHTML = ''; if (!Array.isArray(sessions) || sessions.length === 0) { const empty = document.createElement('div'); empty.className = 'empty'; empty.textContent = 'No active sessions yet.'; sessionList.appendChild(empty); sessionCount.textContent = '0'; return; } sessions.forEach((session) => { const card = document.createElement('article'); card.className = 'session-card'; card.setAttribute('role', 'listitem'); const title = document.createElement('h3'); title.textContent = session.name || 'Remote session'; const meta = document.createElement('div'); meta.className = 'session-meta'; const time = document.createElement('span'); time.textContent = session.updatedAt ? `Started ${formatTimestamp(session.updatedAt)}` : 'Online now'; const status = document.createElement('span'); status.className = 'session-status'; status.dataset.status = session.status || 'offline'; status.textContent = session.status === 'online' ? 'Online' : 'Offline'; meta.append(time, status); card.append(title, meta); sessionList.appendChild(card); }); sessionCount.textContent = sessions.length.toString(); }
 
 function renderTaskList(listElement, list, emptyMessage) {
@@ -434,6 +418,7 @@ function render() {
   renderPairingRequest();
   renderDeviceList();
   renderSessionList();
+  renderActiveSession();
   updateTimestamp();
   updateStatusPill();
 }
@@ -455,6 +440,10 @@ window.addEventListener('storage', (event) => {
     pairingRequest = loadPairingRequest();
     render();
   }
+  if (event.key === activeSessionKey) {
+    activeSessionId = loadActiveSessionId();
+    renderActiveSession();
+  }
 });
 
 if (approvePairingButton) {
@@ -465,6 +454,9 @@ if (rejectPairingButton) {
 }
 if (manualLinkButton) {
   manualLinkButton.addEventListener('click', submitManualLink);
+}
+if (startMobileSessionButton) {
+  startMobileSessionButton.addEventListener('click', startMobileSession);
 }
 
 ingestPairingLink();
